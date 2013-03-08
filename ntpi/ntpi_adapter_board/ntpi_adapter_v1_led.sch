@@ -5084,6 +5084,7 @@ Source: www.kingbright.com</description>
 <wire x1="71.12" y1="60.96" x2="60.96" y2="60.96" width="0.1524" layer="91"/>
 <pinref part="JP2" gate="A" pin="8"/>
 <wire x1="60.96" y1="60.96" x2="60.96" y2="63.5" width="0.1524" layer="91"/>
+<label x="63.5" y="60.96" size="1.778" layer="95" rot="R180"/>
 </segment>
 </net>
 <net name="SCL" class="0">
@@ -5092,6 +5093,7 @@ Source: www.kingbright.com</description>
 <wire x1="71.12" y1="58.42" x2="63.5" y2="58.42" width="0.1524" layer="91"/>
 <pinref part="JP2" gate="A" pin="9"/>
 <wire x1="63.5" y1="58.42" x2="63.5" y2="63.5" width="0.1524" layer="91"/>
+<label x="63.5" y="58.42" size="1.778" layer="95" rot="R180"/>
 </segment>
 </net>
 <net name="PPS" class="0">
