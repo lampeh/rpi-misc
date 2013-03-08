@@ -77,18 +77,16 @@
 <wire x1="35.921" y1="14.148" x2="29.464" y2="14.148" width="0" layer="20"/>
 <wire x1="29.464" y1="14.148" x2="29.464" y2="9.906" width="0" layer="20"/>
 <wire x1="0" y1="9.906" x2="0" y2="0" width="0" layer="20"/>
-<text x="0.762" y="8.382" size="0.8128" layer="25" ratio="16">NTPi Adapter Board</text>
+<text x="0.762" y="8.382" size="0.8128" layer="25" font="vector" ratio="16">NTPi Adapter Board</text>
 <text x="0.508" y="3.81" size="0.6096" layer="25" font="vector">SCL</text>
 <text x="3.048" y="3.81" size="0.6096" layer="25" font="vector">SDA</text>
-<text x="5.588" y="3.81" size="0.6096" layer="25" font="vector">GND</text>
-<text x="8.128" y="3.81" size="0.6096" layer="25" font="vector">3V3</text>
 <text x="10.668" y="3.81" size="0.6096" layer="25" font="vector">RXD</text>
 <text x="13.208" y="3.81" size="0.6096" layer="25" font="vector">TXD</text>
 <text x="15.748" y="3.81" size="0.6096" layer="25" font="vector">GND</text>
 <text x="18.288" y="3.81" size="0.6096" layer="25" font="vector">+5V</text>
 <text x="20.828" y="3.81" size="0.6096" layer="25" font="vector">PPS</text>
-<text x="0.762" y="7.366" size="0.6096" layer="25">http://ntpi.openchaos.org/</text>
-<text x="25.654" y="0.508" size="0.6096" layer="25">v1.0 2013-02</text>
+<text x="0.762" y="7.366" size="0.6096" layer="25" font="vector" ratio="5">http://ntpi.openchaos.org/</text>
+<text x="25.654" y="0.508" size="0.6096" layer="25" font="vector">v1.1 2013-03</text>
 <text x="30.48" y="9.525" size="0.6096" layer="25" font="vector" rot="R90">SCL</text>
 <text x="30.48" y="12.065" size="0.6096" layer="25" font="vector" rot="R90">SDA</text>
 <text x="33.147" y="4.445" size="0.6096" layer="25" font="vector" rot="R90">RXD</text>
@@ -96,27 +94,20 @@
 <text x="33.528" y="12.065" size="0.6096" layer="25" font="vector" rot="R90">+5V</text>
 <text x="33.528" y="9.525" size="0.6096" layer="25" font="vector" rot="R90">GND</text>
 <text x="33.147" y="1.905" size="0.6096" layer="25" font="vector" rot="R90">PPS</text>
-<text x="0.508" y="4.826" size="0.6096" layer="25" ratio="16">To GPS</text>
-<text x="32.131" y="1.905" size="0.6096" layer="25" ratio="16" rot="R90">To RPi</text>
+<text x="0.508" y="4.826" size="0.6096" layer="25" font="vector" ratio="16">To GPS</text>
+<text x="32.131" y="1.905" size="0.6096" layer="25" font="vector" ratio="16" rot="R90">To RPi</text>
 <wire x1="0" y1="9.906" x2="29.464" y2="9.906" width="0" layer="20"/>
-<text x="20.066" y="6.731" size="0.6096" layer="26" rot="MR0">xmpp:lampe@hauke-lampe.de</text>
+<text x="20.066" y="6.731" size="0.6096" layer="26" font="vector" ratio="5" rot="MR0">xmpp:lampe@hauke-lampe.de</text>
 <circle x="15.0876" y="8.6868" radius="0.915809375" width="0" layer="1"/>
 <circle x="15.6464" y="8.6868" radius="0.113590625" width="0" layer="29"/>
 <circle x="15.0876" y="8.128" radius="0.113590625" width="0" layer="29"/>
 <circle x="14.5288" y="8.6868" radius="0.113590625" width="0" layer="29"/>
-<circle x="15.0876" y="8.6868" radius="0.8515625" width="0.1524" layer="25"/>
+<circle x="15.0876" y="8.6868" radius="0.889" width="0.0762" layer="25"/>
 <wire x1="15.0876" y1="9.144" x2="15.0876" y2="8.6868" width="0.1524" layer="25"/>
 <wire x1="15.0876" y1="8.6868" x2="15.3416" y2="8.6868" width="0.1524" layer="25"/>
-<polygon width="0.0254" layer="29" spacing="1.016">
-<vertex x="14.986" y="9.2202" curve="-194.250033"/>
-<vertex x="15.1892" y="9.2456" curve="-36.869898"/>
-<vertex x="15.1638" y="9.1694" curve="90"/>
-<vertex x="15.113" y="9.2202"/>
-<vertex x="15.0622" y="9.2202" curve="90"/>
-<vertex x="15.0114" y="9.1694" curve="-53.130102"/>
-</polygon>
 <text x="30.48" y="7.112" size="0.4064" layer="25" font="vector" rot="R90">PPS</text>
 <text x="29.845" y="7.112" size="0.4064" layer="25" font="vector" rot="R90">ALT</text>
+<circle x="15.0876" y="9.271" radius="0.113590625" width="0" layer="29"/>
 </plain>
 <libraries>
 <library name="pinhead">
@@ -1599,41 +1590,39 @@ Please make sure your boards conform to these design rules.</description>
 </autorouter>
 <elements>
 <element name="JP1" library="frell2" package="PINHEAD-NTPI" value="" x="33.296" y="7.724" smashed="yes" rot="R270">
-<attribute name="NAME" x="33.782" y="0.508" size="0.6096" layer="25" ratio="10"/>
+<attribute name="NAME" x="33.782" y="0.508" size="0.6096" layer="25" font="vector" ratio="10"/>
 <attribute name="VALUE" x="28.851" y="14.074" size="1.27" layer="27" rot="R270"/>
 </element>
 <element name="JP2" library="pinhead" package="1X09" value="" x="11.476" y="1.984" smashed="yes" rot="MR0">
-<attribute name="NAME" x="22.86" y="0.508" size="0.6096" layer="25" ratio="10"/>
+<attribute name="NAME" x="22.86" y="0.508" size="0.6096" layer="25" font="vector" ratio="10"/>
 <attribute name="VALUE" x="22.906" y="-1.191" size="1.27" layer="28" rot="MR0"/>
 </element>
 <element name="R1" library="resistor" package="R0805W" value="1M" x="27.178" y="5.461" smashed="yes" rot="R270">
-<attribute name="NAME" x="26.035" y="7.493" size="0.6096" layer="25"/>
+<attribute name="NAME" x="26.035" y="7.493" size="0.6096" layer="25" font="vector"/>
 </element>
-<element name="R2" library="resistor" package="R0805W" value="220" x="24.13" y="5.461" smashed="yes" rot="R90">
-<attribute name="NAME" x="24.511" y="7.493" size="0.6096" layer="25"/>
+<element name="R2" library="resistor" package="R0805W" value="220" x="24.13" y="5.461" smashed="yes" rot="R270">
+<attribute name="NAME" x="23.749" y="3.429" size="0.6096" layer="25" font="vector" rot="R180"/>
 </element>
 <element name="Q1" library="transistor-npn" package="SOT23" value="BC849C" x="18.29" y="6.355" smashed="yes" rot="R180">
-<attribute name="NAME" x="17.905" y="8.377" size="0.6096" layer="25"/>
+<attribute name="NAME" x="17.905" y="8.377" size="0.6096" layer="25" font="vector"/>
 </element>
 <element name="LED1" library="led" package="CHIPLED_0805" value="" x="21.59" y="6.477" smashed="yes" rot="R180">
-<attribute name="NAME" x="20.574" y="8.382" size="0.6096" layer="25"/>
+<attribute name="NAME" x="20.574" y="8.382" size="0.6096" layer="25" font="vector"/>
 <attribute name="VALUE" x="19.05" y="7.747" size="1.27" layer="27" rot="R270"/>
 </element>
 <element name="R3" library="resistor" package="R0805W" value="0" x="29.718" y="2.159" smashed="yes">
-<attribute name="NAME" x="29.718" y="3.556" size="0.6096" layer="25" rot="R180"/>
+<attribute name="NAME" x="29.718" y="3.556" size="0.6096" layer="25" font="vector" rot="R180"/>
 </element>
 </elements>
 <signals>
 <signal name="+5V">
 <contactref element="JP1" pad="2"/>
 <contactref element="JP2" pad="2"/>
-<contactref element="R2" pad="1"/>
 <via x="25.654" y="6.985" extent="1-16" drill="0.6"/>
 <wire x1="25.654" y1="3.937" x2="24.13" y2="3.937" width="0.4064" layer="1"/>
 <wire x1="24.13" y1="3.937" x2="19.096" y2="3.937" width="0.4064" layer="1"/>
 <wire x1="19.096" y1="3.937" x2="19.096" y2="1.984" width="0.4064" layer="1"/>
 <wire x1="25.654" y1="6.985" x2="25.654" y2="3.937" width="0.4064" layer="1"/>
-<wire x1="24.13" y1="4.521" x2="24.13" y2="3.937" width="0.4064" layer="1"/>
 <via x="28.702" y="6.985" extent="1-16" drill="0.6"/>
 <wire x1="28.702" y1="6.985" x2="25.654" y2="6.985" width="0.4064" layer="16"/>
 <wire x1="34.566" y1="12.804" x2="33.319" y2="11.557" width="0.4064" layer="1"/>
@@ -1642,17 +1631,20 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="30.607" y1="10.795" x2="30.607" y2="9.271" width="0.4064" layer="1"/>
 <wire x1="30.607" y1="9.271" x2="28.702" y2="7.366" width="0.4064" layer="1"/>
 <wire x1="28.702" y1="7.366" x2="28.702" y2="6.985" width="0.4064" layer="1"/>
+<contactref element="R2" pad="2"/>
+<wire x1="24.13" y1="4.521" x2="24.13" y2="4.699" width="0.4064" layer="1"/>
+<wire x1="24.13" y1="4.521" x2="24.13" y2="3.937" width="0.4064" layer="1"/>
 </signal>
 <signal name="GND">
 <contactref element="JP1" pad="4"/>
 <contactref element="JP2" pad="3"/>
-<contactref element="Q1" pad="2"/>
 <wire x1="16.556" y1="1.984" x2="16.556" y2="3.937" width="0.4064" layer="16"/>
 <wire x1="16.556" y1="3.937" x2="33.401" y2="3.937" width="0.4064" layer="16"/>
-<wire x1="17.34" y1="7.455" x2="16.556" y2="7.455" width="0.4064" layer="1"/>
 <wire x1="16.556" y1="7.455" x2="16.556" y2="1.984" width="0.4064" layer="1"/>
 <wire x1="34.566" y1="10.264" x2="33.401" y2="9.099" width="0.4064" layer="16"/>
 <wire x1="33.401" y1="9.099" x2="33.401" y2="3.937" width="0.4064" layer="16"/>
+<contactref element="Q1" pad="2"/>
+<wire x1="17.34" y1="7.455" x2="16.556" y2="7.455" width="0.4064" layer="1"/>
 </signal>
 <signal name="GPS-RX">
 <contactref element="JP1" pad="6"/>
@@ -1694,33 +1686,14 @@ Please make sure your boards conform to these design rules.</description>
 </signal>
 <signal name="PPS">
 <contactref element="JP2" pad="1"/>
-<contactref element="R1" pad="2"/>
 <wire x1="27.178" y1="2.159" x2="25.654" y2="2.159" width="0.4064" layer="1"/>
 <wire x1="25.654" y1="2.159" x2="21.811" y2="2.159" width="0.4064" layer="1"/>
 <wire x1="21.811" y1="2.159" x2="21.636" y2="1.984" width="0.4064" layer="1"/>
-<via x="25.654" y="2.159" extent="1-16" drill="0.8" shape="octagon" alwaysstop="yes"/>
-<wire x1="27.178" y1="4.521" x2="27.178" y2="2.159" width="0.4064" layer="1"/>
+<via x="25.654" y="2.159" extent="1-16" drill="1.016" shape="octagon" alwaysstop="yes"/>
 <contactref element="R3" pad="1"/>
 <wire x1="27.178" y1="2.159" x2="28.778" y2="2.159" width="0.4064" layer="1"/>
-</signal>
-<signal name="N$8">
-<contactref element="Q1" pad="3"/>
-<contactref element="LED1" pad="C"/>
-<wire x1="18.29" y1="5.255" x2="21.59" y2="5.255" width="0.4064" layer="1"/>
-<wire x1="21.59" y1="5.255" x2="21.59" y2="5.427" width="0.4064" layer="1"/>
-</signal>
-<signal name="N$9">
-<contactref element="LED1" pad="A"/>
-<contactref element="R2" pad="2"/>
-<wire x1="21.59" y1="7.527" x2="24.13" y2="7.527" width="0.4064" layer="1"/>
-<wire x1="24.13" y1="7.527" x2="24.13" y2="6.401" width="0.4064" layer="1"/>
-</signal>
-<signal name="N$10">
-<contactref element="R1" pad="1"/>
-<contactref element="Q1" pad="1"/>
-<wire x1="19.24" y1="9.017" x2="27.178" y2="9.017" width="0.4064" layer="1"/>
-<wire x1="27.178" y1="9.017" x2="27.178" y2="6.401" width="0.4064" layer="1"/>
-<wire x1="19.24" y1="9.017" x2="19.24" y2="7.455" width="0.4064" layer="1"/>
+<contactref element="R1" pad="2"/>
+<wire x1="27.178" y1="4.521" x2="27.178" y2="2.159" width="0.4064" layer="1"/>
 </signal>
 <signal name="N$11">
 </signal>
@@ -1741,6 +1714,26 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="34.081" y1="2.159" x2="34.566" y2="2.644" width="0.4064" layer="1"/>
 <contactref element="R3" pad="2"/>
 <wire x1="34.081" y1="2.159" x2="30.658" y2="2.159" width="0.4064" layer="1"/>
+</signal>
+<signal name="N$2">
+<contactref element="R2" pad="1"/>
+<contactref element="LED1" pad="A"/>
+<wire x1="24.13" y1="6.401" x2="24.13" y2="7.527" width="0.4064" layer="1"/>
+<wire x1="24.13" y1="7.527" x2="21.59" y2="7.527" width="0.4064" layer="1"/>
+</signal>
+<signal name="N$3">
+<contactref element="LED1" pad="C"/>
+<contactref element="Q1" pad="3"/>
+<wire x1="18.29" y1="5.255" x2="21.59" y2="5.255" width="0.4064" layer="1"/>
+<wire x1="21.59" y1="5.255" x2="21.59" y2="5.427" width="0.4064" layer="1"/>
+</signal>
+<signal name="N$4">
+<contactref element="R1" pad="1"/>
+<contactref element="Q1" pad="1"/>
+<wire x1="27.178" y1="6.401" x2="27.178" y2="9.017" width="0.4064" layer="1"/>
+<wire x1="27.178" y1="9.017" x2="19.177" y2="9.017" width="0.4064" layer="1"/>
+<wire x1="19.177" y1="9.017" x2="19.177" y2="7.455" width="0.4064" layer="1"/>
+<wire x1="19.177" y1="7.455" x2="19.24" y2="7.455" width="0.4064" layer="1"/>
 </signal>
 </signals>
 </board>
