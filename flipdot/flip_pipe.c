@@ -25,9 +25,12 @@
 // #include <util/delay.h>
 // #include <avr/io.h>
 #include <bcm2835.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/param.h>
 
 #define ISBITSET(x,i) ((x[i>>3] & (1<<(i&7)))!=0)
 #define SETBIT(x,i) x[i>>3]|=(1<<(i&7));
@@ -276,6 +279,9 @@ int main(void) {
 	uint8_t i = 0;
 	int c;
 
+	if (!bcm2835_init())
+		return 1;
+
 	flipdot_init();
 	memset(bmp, 0x00, sizeof(bmp));
 	
@@ -305,4 +311,3 @@ int main(void) {
 
 	return(0);
 }
-

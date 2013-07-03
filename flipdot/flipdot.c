@@ -25,6 +25,8 @@
 // #include <util/delay.h>
 // #include <avr/io.h>
 #include <bcm2835.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -274,25 +276,25 @@ flip_black(void)
 static uint8_t bmp[DISP_BYTE_COUNT];
 
 int main(void) {
-	flipdot_init();
+	if (!bcm2835_init())
+		return 1;
 
+	flipdot_init();
 	memset(bmp, 0x00, sizeof(bmp));
-	
+
 	for (int i = 0; i < DISP_COLS + DISP_ROWS - 1; i++) {
-		for (int j = MAX(i, DISP_COLS-1); j > 0 && (i-j) < DISP_ROWS; j--) {
+		for (int j = MIN(i, DISP_COLS-1); j > 0 && (i-j) < DISP_ROWS; j--) {
 			BMP_SETBIT(bmp, j, (i-j));
 		}
 		flipdot_data(bmp, sizeof(bmp));
-
 		usleep(100*1000);
 	}
 
 	for (int i = 0; i < DISP_COLS + DISP_ROWS - 1; i++) {
-		for (int j = MAX(i, DISP_COLS-1); j > 0 && (i-j) < DISP_ROWS; j--) {
+		for (int j = MIN(i, DISP_COLS-1); j > 0 && (i-j) < DISP_ROWS; j--) {
 			BMP_CLEARBIT(bmp, j, (i-j));
 		}
 		flipdot_data(bmp, sizeof(bmp));
-
 		usleep(100*1000);
 	}
 
