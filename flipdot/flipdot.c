@@ -64,7 +64,7 @@ _hw_init(void)
 static inline void
 _hw_set(uint_fast8_t gpio)
 {
-	_hw_set(gpio);
+	bcm2835_gpio_set(gpio);
 }
 
 static inline void
@@ -156,7 +156,11 @@ flipdot_display_frame(const flipdot_frame_t *frame)
 		memset(row_select, 0, sizeof(row_select));
 		SETBIT(row_select, row);						/* Set selected row */
 
-		flipdot_display_row(row_select, row_data);
+		sreg_fill(ROW, row_select, DISP_ROWS, 0);
+		sreg_fill(COL, row_data, DISP_COLS, offset);
+		strobe();
+		flip_to_0();
+		flip_to_1();
 	}
 }
 
