@@ -270,7 +270,7 @@ sreg_push_bit(enum sreg reg, uint_fast8_t bit)
 	_nanosleep(CLK_DELAY);
 
 	_hw_clr(CLK(reg));
-	_nanosleep(CLK_DELAY);
+	//_nanosleep(CLK_DELAY);
 }
 
 static void
