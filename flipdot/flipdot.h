@@ -29,11 +29,11 @@
 // BCM2835 GPIO pin mapping
 #define STROBE 7
 
-#define DATA_COL 11
-#define DATA_ROW 8
+#define DATA_COL 8
+#define DATA_ROW 11
 
-#define CLK_COL 9
-#define CLK_ROW 25
+#define CLK_COL 25
+#define CLK_ROW 9
 
 #define OE1 10
 #define OE0 24
@@ -47,6 +47,8 @@
 
 // flip motor pulse width (ns)
 #define FLIP_DELAY 500*1000
+//#define FLIP_DELAY 850*1000
+//#define FLIP_DELAY 1000*1000
 
 
 // display geometry
@@ -98,11 +100,12 @@ enum sreg {
 void flipdot_init(void);
 void flipdot_clear_to_0(void);
 void flipdot_clear_to_1(void);
-void flipdot_display_row(const flipdot_row_reg_t *rows, const flipdot_col_reg_t *cols);
-void flipdot_display_frame(const flipdot_frame_t *frame);
-void flipdot_display_diff(const flipdot_frame_t *diff_to_0, const flipdot_frame_t *diff_to_1);
+void flipdot_display_row(flipdot_row_reg_t *rows, flipdot_col_reg_t *cols);
+void flipdot_display_frame(flipdot_frame_t *frame);
+void flipdot_update_frame(flipdot_frame_t *frame);
+void flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1);
 
-extern inline void
+static inline void
 flipdot_clear(void)
 {
     flipdot_clear_to_0();

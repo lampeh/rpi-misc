@@ -20,11 +20,8 @@
 */
 
 
-#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdbool.h>
-#include <unistd.h>
 #include <time.h>
 #include <errno.h>
 #include <bcm2835.h>
@@ -38,6 +35,18 @@
 #define DATA(reg) (((reg) == ROW) ? (DATA_ROW) : (DATA_COL))
 #define CLK(reg) (((reg) == ROW) ? (CLK_ROW) : (CLK_COL))
 #define OE(reg) (((reg) == ROW) ? (OE_ROW) : (OE_COL))
+
+
+static flipdot_frame_t frame_a;
+static flipdot_frame_t frame_b;
+static flipdot_frame_t *frame_new, *frame_old;
+
+
+static void sreg_push_bit(enum sreg reg, uint_fast8_t bit);
+static void sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t offset);
+static void strobe(void);
+static void flip_to_0(void);
+static void flip_to_1(void);
 
 
 static inline void
@@ -89,51 +98,61 @@ void
 flipdot_init(void)
 {
 	_hw_init();
+
+	memset(frame_a, 0x00, sizeof(frame_a));
+	memset(frame_b, 0x00, sizeof(frame_b));
+	frame_old = &frame_a;
+	frame_new = &frame_b;
+//	flipdot_display_frame(frame_old);
 }
 
 void
 flipdot_clear_to_0(void)
 {
 	flipdot_frame_t frame;
+
 	memset(frame, 0x00, sizeof(frame));
-	flipdot_display_frame(frame);
+	flipdot_display_frame(&frame);
 }
 
 void
 flipdot_clear_to_1(void)
 {
 	flipdot_frame_t frame;
+
 	memset(frame, 0xFF, sizeof(frame));
-	flipdot_display_frame(frame);
+	flipdot_display_frame(&frame);
 }
 
+/*
 void
 flipdot_clear(void)
 {
 	flipdot_clear_to_0();
 }
+*/
 
 void
-flipdot_display_row(const flipdot_row_reg_t *rows, const flipdot_col_reg_t *cols)
+flipdot_display_row(flipdot_row_reg_t *rows, flipdot_col_reg_t *cols)
 {
-	sreg_fill(ROW, rows, DISP_ROWS, 0);
-	sreg_fill(COL, cols, DISP_COLS, 0);
+	sreg_fill(ROW, (uint8_t *)rows, DISP_ROWS, 0);
+	sreg_fill(COL, (uint8_t *)cols, DISP_COLS, 0);
 	strobe();
 	flip_to_0();
 	flip_to_1();
 }
 
 void
-flipdot_display_frame(const flipdot_frame_t *frame)
+flipdot_display_frame(flipdot_frame_t *frame)
 {
 	uint8_t row_select[(DISP_ROWS + 7) / 8];
 	uint8_t row_data[((DISP_COLS + 7) / 8) + 1];
-	uint8_t *frameptr = frame;
+	uint8_t *frameptr = (uint8_t *)frame;
 	uint_fast8_t offset;
 	uint_fast8_t rem = 0;
 
 	for (uint_fast16_t row = 0; row < DISP_ROWS; row++) {
-#if (DISP_COLS % 8) != 0)
+#if ((DISP_COLS % 8) != 0)
 		uint8_t *rowptr = row_data;
 		if (rem) {
 			*rowptr++ = *frameptr++ & (0xFF << (8 - rem));
@@ -142,8 +161,8 @@ flipdot_display_frame(const flipdot_frame_t *frame)
 			offset = 0;
 		}
 		memcpy(rowptr, frameptr, (DISP_COLS - rem) / 8);
-		frameptr += (DISP_COLS - rem) / 8);
-		rowptr += (DISP_COLS - rem) / 8);
+		frameptr += ((DISP_COLS - rem) / 8);
+		rowptr += ((DISP_COLS - rem) / 8);
 		rem = 8 - ((DISP_COLS - rem) % 8);
 		*rowptr = *frameptr & (0xFF >> rem);
 #else
@@ -164,9 +183,28 @@ flipdot_display_frame(const flipdot_frame_t *frame)
 	}
 }
 
+void
+flipdot_update_frame(flipdot_frame_t *frame) {
+	flipdot_frame_t *tmp;
+	flipdot_frame_t diff_to_0;
+	flipdot_frame_t diff_to_1;
+
+	tmp = frame_old;
+	frame_old = frame_new;
+	frame_new = tmp;
+
+	memcpy(frame_new, frame, sizeof(flipdot_frame_t));
+
+	for (uint_fast16_t i = 0; i < sizeof(flipdot_frame_t); i++) {
+		diff_to_0[i] = *((uint8_t *)frame_old + i) & ~*((uint8_t *)frame_old + i);
+		diff_to_1[i] = ~(~*((uint8_t *)frame_old + i) & *((uint8_t *)frame_old + i));
+	}
+	flipdot_display_diff(&diff_to_0, &diff_to_1);	
+}
+
 // TODO: skip unchanged rows
 void
-flipdot_display_diff(const flipdot_frame_t *diff_to_0, const flipdot_frame_t *diff_to_1)
+flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
 {
 	uint8_t row_select[(DISP_ROWS + 7) / 8];
 	uint8_t row_data_to_0[((DISP_COLS + 7) / 8) + 1];
@@ -176,12 +214,12 @@ flipdot_display_diff(const flipdot_frame_t *diff_to_0, const flipdot_frame_t *di
 	uint_fast8_t rem = 0;
 
 	for (uint_fast16_t row = 0; row < DISP_ROWS; row++) {
-#if (DISP_COLS % 8) != 0)
+#if ((DISP_COLS % 8) != 0)
 		uint8_t *rowptr_to_0 = row_data_to_0;
 		uint8_t *rowptr_to_1 = row_data_to_1;
 		if (rem) {
-			*rowptr_to_0++ = diff_to_0[frameidx] & (0xFF << (8 - rem));
-			*rowptr_to_1++ = diff_to_1[frameidx] & (0xFF << (8 - rem));
+			*rowptr_to_0++ = *((uint8_t *)diff_to_0 + frameidx) & (0xFF << (8 - rem));
+			*rowptr_to_1++ = *((uint8_t *)diff_to_1 + frameidx) & (0xFF << (8 - rem));
 			frameidx++;
 			offset = 8 - rem;
 		} else {
@@ -189,12 +227,12 @@ flipdot_display_diff(const flipdot_frame_t *diff_to_0, const flipdot_frame_t *di
 		}
 		memcpy(rowptr_to_0, diff_to_0 + frameidx, (DISP_COLS - rem) / 8);
 		memcpy(rowptr_to_1, diff_to_1 + frameidx, (DISP_COLS - rem) / 8);
-		frameidx += (DISP_COLS - rem) / 8);
-		rowptr_to_0 += (DISP_COLS - rem) / 8);
-		rowptr_to_1 += (DISP_COLS - rem) / 8);
+		frameidx += ((DISP_COLS - rem) / 8);
+		rowptr_to_0 += ((DISP_COLS - rem) / 8);
+		rowptr_to_1 += ((DISP_COLS - rem) / 8);
 		rem = 8 - ((DISP_COLS - rem) % 8);
-		*rowptr_to_0 = diff_to_0[frameidx] & (0xFF >> rem);
-		*rowptr_to_1 = diff_to_1[frameidx] & (0xFF >> rem);
+		*rowptr_to_0 = *((uint8_t *)diff_to_0 + frameidx) & (0xFF >> rem);
+		*rowptr_to_1 = *((uint8_t *)diff_to_1 + frameidx) & (0xFF >> rem);
 #else
 		memcpy(row_data_to_0, diff_to_0 + frameidx, DISP_COLS / 8);
 		memcpy(row_data_to_1, diff_to_1 + frameidx, DISP_COLS / 8);
@@ -241,14 +279,14 @@ sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t 
 	uint_fast16_t j = 0;
 
 	while (count--) {
-		if (reg == COL && j++ >= MODULE_COLS) {
+		if (reg == COL && j-- == 0) {
 			// skip unused register bits
 			for (uint_fast8_t k = 0; k < COL_GAP; k++) {
 				sreg_push_bit(reg, 0);
 			}
-			j = 0;
+			j = MODULE_COLS;
 		}
-		sreg_push_bit(reg, ISBITSET(data, count + offset);
+		sreg_push_bit(reg, ISBITSET(data, count + offset));
 	}
 }
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <bcm2835.h>
 #include "flipdot.h"
 
@@ -10,6 +11,8 @@ flipdot_frame_t bmp;
 unsigned int x, y;
 
 int main(void) {
+	int c;
+
 	if (!bcm2835_init())
 		return 1;
 
@@ -21,7 +24,7 @@ int main(void) {
 	while ((c = getc(stdin)) != EOF) {
 		if (c == '\n') {
 			if ((c = getc(stdin)) == '\n') {
-				flipdot_display_frame(bmp);
+				flipdot_display_frame(&bmp);
 				memset(bmp, 0x00, sizeof(bmp));
 				x = 0;
 				y = 0;
@@ -44,5 +47,6 @@ int main(void) {
 		}
 	}
 
+//	flipdot_display_frame(&bmp);
 	return(0);
 }
