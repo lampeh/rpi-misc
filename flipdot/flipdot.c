@@ -307,8 +307,8 @@ flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
 #endif
 
 		memset(row_select, 0, sizeof(row_select));
-		SETBIT(row_select, row);						/* Set selected row */
-		sreg_fill(ROW, row_select, DISP_ROWS, 0);			/* Fill row select shift register */
+		SETBIT(row_select, row);
+		sreg_fill(ROW, row_select, DISP_ROWS, 0);
 
 		sreg_fill(COL, row_data_to_0, DISP_COLS, offset);
 		strobe();
