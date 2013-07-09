@@ -44,6 +44,7 @@ static flipdot_frame_t *frame_new, *frame_old;
 
 static void sreg_push_bit(enum sreg reg, uint_fast8_t bit);
 static void sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t offset);
+static void sreg_fill2(const uint8_t *row_data, uint_fast16_t count1, uint_fast8_t offset1, const uint8_t *col_data, uint_fast16_t count2, uint_fast8_t offset2);
 static void strobe(void);
 static void flip_to_0(void);
 static void flip_to_1(void);
@@ -167,7 +168,7 @@ flipdot_display_frame(flipdot_frame_t *frame)
 		*rowptr = *frameptr & (0xFF >> rem);
 #else
 		memcpy(row_data, frameptr, DISP_COLS / 8);
-		frameptr += DISP_COLS / 8);
+		frameptr += DISP_COLS / 8;
 		offset = 0;
 		rem = 0;
 #endif
@@ -175,8 +176,11 @@ flipdot_display_frame(flipdot_frame_t *frame)
 		memset(row_select, 0, sizeof(row_select));
 		SETBIT(row_select, row);						/* Set selected row */
 
+/*
 		sreg_fill(ROW, row_select, DISP_ROWS, 0);
 		sreg_fill(COL, row_data, DISP_COLS, offset);
+*/
+		sreg_fill2(row_select, DISP_ROWS, 0, row_data, DISP_COLS, offset);
 		strobe();
 		flip_to_0();
 		flip_to_1();
@@ -203,6 +207,67 @@ flipdot_update_frame(flipdot_frame_t *frame) {
 }
 
 // TODO: skip unchanged rows
+void
+flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
+{
+	uint8_t row_select[(DISP_ROWS + 7) / 8];
+	uint8_t row_data_to_0[((DISP_COLS + 7) / 8) + 1];
+	uint8_t row_data_to_1[((DISP_COLS + 7) / 8) + 1];
+	uint8_t *frameptr_to_0 = (uint8_t *)diff_to_0;
+	uint8_t *frameptr_to_1 = (uint8_t *)diff_to_1;
+	uint_fast8_t offset;
+	uint_fast8_t rem = 0;
+
+	for (uint_fast16_t row = 0; row < DISP_ROWS; row++) {
+#if ((DISP_COLS % 8) != 0)
+		uint8_t *rowptr_to_0 = row_data_to_0;
+		uint8_t *rowptr_to_1 = row_data_to_1;
+		if (rem) {
+			*rowptr_to_0++ = *frameptr_to_0++ & (0xFF << (8 - rem));
+			*rowptr_to_1++ = *frameptr_to_1++ & (0xFF << (8 - rem));
+			offset = 8 - rem;
+		} else {
+			offset = 0;
+		}
+		memcpy(rowptr_to_0, frameptr_to_0, (DISP_COLS - rem) / 8);
+		memcpy(rowptr_to_1, frameptr_to_0, (DISP_COLS - rem) / 8);
+		frameptr_to_0 += ((DISP_COLS - rem) / 8);
+		frameptr_to_1 += ((DISP_COLS - rem) / 8);
+		rowptr_to_0 += ((DISP_COLS - rem) / 8);
+		rowptr_to_1 += ((DISP_COLS - rem) / 8);
+		rem = 8 - ((DISP_COLS - rem) % 8);
+		*rowptr_to_0 = *frameptr_to_0 & (0xFF >> rem);
+		*rowptr_to_1 = *frameptr_to_1 & (0xFF >> rem);
+#else
+		memcpy(row_data_to_0, frameptr_to_0, DISP_COLS / 8);
+		memcpy(row_data_to_1, frameptr_to_1, DISP_COLS / 8);
+		frameptr_to_0 += DISP_COLS / 8;
+		frameptr_to_1 += DISP_COLS / 8;
+		offset = 0;
+		rem = 0;
+#endif
+
+		memset(row_select, 0, sizeof(row_select));
+		SETBIT(row_select, row);						/* Set selected row */
+
+/*
+		sreg_fill(ROW, row_select, DISP_ROWS, 0);
+		sreg_fill(COL, row_data_to_0, DISP_COLS, offset);
+		strobe();
+		flip_to_0();
+*/
+
+		sreg_fill2(row_select, DISP_ROWS, 0, row_data_to_0, DISP_COLS, offset);
+		strobe();
+		flip_to_0();
+
+		sreg_fill(COL, row_data_to_1, DISP_COLS, offset);
+		strobe();
+		flip_to_1();
+	}
+}
+
+/*
 void
 flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
 {
@@ -254,7 +319,7 @@ flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
 		flip_to_1();
 	}
 }
-
+*/
 
 static void
 sreg_push_bit(enum sreg reg, uint_fast8_t bit)
@@ -291,11 +356,71 @@ sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t 
 }
 
 static void
+sreg_fill2(const uint8_t *row_data, uint_fast16_t count1, uint_fast8_t offset1, const uint8_t *col_data, uint_fast16_t count2, uint_fast8_t offset2)
+{
+	uint_fast16_t j = 0;
+
+	while (count1 || count2) {
+		if (count2 && j-- == 0) {
+			// skip unused register bits
+			for (uint_fast8_t k = 0; k < COL_GAP; k++) {
+				sreg_push_bit(COL, 0);
+			}
+			j = MODULE_COLS;
+		}
+
+		if (count1) {
+			if (ISBITSET(row_data, count1 + offset1)) {
+				_hw_set(DATA(ROW));
+			} else {
+				_hw_clr(DATA(ROW));
+			}
+		}
+
+		if (count2) {
+			if (ISBITSET(col_data, count2 + offset2)) {
+				_hw_set(DATA(COL));
+			} else {
+				_hw_clr(DATA(COL));
+			}
+		}
+
+		_nanosleep(DATA_DELAY);
+
+		if (count1) {
+			_hw_set(CLK(ROW));
+		}
+
+		if (count2) {
+			_hw_set(CLK(COL));
+		}
+
+		_nanosleep(CLK_DELAY);
+
+		if (count1) {
+			_hw_clr(CLK(ROW));
+		}
+
+		if (count2) {
+			_hw_clr(CLK(COL));
+		}
+
+		if (count1) {
+			count1--;
+		}
+
+		if (count2) {
+			count2--;
+		}
+	}
+}
+
+static void
 strobe(void)
 {
 	_hw_set(STROBE);
 
-	_nanosleep(STROBE_DELAY);
+//	_nanosleep(STROBE_DELAY);
 
 	_hw_clr(STROBE);
 }
@@ -304,6 +429,7 @@ static void
 flip_to_0(void)
 {
 	_hw_clr(OE1);
+_nanosleep(1000);
 	_hw_set(OE0);
 
 	_nanosleep(FLIP_DELAY);
@@ -315,6 +441,7 @@ static void
 flip_to_1(void)
 {
 	_hw_clr(OE0);
+_nanosleep(1000);
 	_hw_set(OE1);
 
 	_nanosleep(FLIP_DELAY);
