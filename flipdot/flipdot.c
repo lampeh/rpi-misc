@@ -44,7 +44,7 @@ static flipdot_frame_t *frame_new, *frame_old;
 
 static void sreg_push_bit(enum sreg reg, uint_fast8_t bit);
 static void sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t offset);
-static void sreg_fill2(const uint8_t *row_data, uint_fast16_t count1, uint_fast8_t offset1, const uint8_t *col_data, uint_fast16_t count2, uint_fast8_t offset2);
+static void sreg_fill2(const uint8_t *row_data, uint_fast16_t row_count, uint_fast8_t row_offset, const uint8_t *col_data, uint_fast16_t col_count, uint_fast8_t col_offset);
 static void strobe(void);
 static void flip_to_0(void);
 static void flip_to_1(void);
@@ -329,13 +329,19 @@ sreg_push_bit(enum sreg reg, uint_fast8_t bit)
 	} else {
 		_hw_clr(DATA(reg));
 	}
+#ifndef NOSLEEP
 	_nanosleep(DATA_DELAY);
+#endif
 
 	_hw_set(CLK(reg));
+#ifndef NOSLEEP
 	_nanosleep(CLK_DELAY);
+#endif
 
 	_hw_clr(CLK(reg));
+#ifndef NOSLEEP
 	//_nanosleep(CLK_DELAY);
+#endif
 }
 
 static void
@@ -356,12 +362,12 @@ sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t 
 }
 
 static void
-sreg_fill2(const uint8_t *row_data, uint_fast16_t count1, uint_fast8_t offset1, const uint8_t *col_data, uint_fast16_t count2, uint_fast8_t offset2)
+sreg_fill2(const uint8_t *row_data, uint_fast16_t row_count, uint_fast8_t row_offset, const uint8_t *col_data, uint_fast16_t col_count, uint_fast8_t col_offset)
 {
 	uint_fast16_t j = 0;
 
-	while (count1 || count2) {
-		if (count2 && j-- == 0) {
+	while (row_count || col_count) {
+		if (col_count && j-- == 0) {
 			// skip unused register bits
 			for (uint_fast8_t k = 0; k < COL_GAP; k++) {
 				sreg_push_bit(COL, 0);
@@ -369,48 +375,52 @@ sreg_fill2(const uint8_t *row_data, uint_fast16_t count1, uint_fast8_t offset1, 
 			j = MODULE_COLS;
 		}
 
-		if (count1) {
-			if (ISBITSET(row_data, count1 + offset1)) {
+		if (row_count) {
+			if (ISBITSET(row_data, row_count + row_offset)) {
 				_hw_set(DATA(ROW));
 			} else {
 				_hw_clr(DATA(ROW));
 			}
 		}
 
-		if (count2) {
-			if (ISBITSET(col_data, count2 + offset2)) {
+		if (col_count) {
+			if (ISBITSET(col_data, col_count + col_offset)) {
 				_hw_set(DATA(COL));
 			} else {
 				_hw_clr(DATA(COL));
 			}
 		}
 
+#ifndef NOSLEEP
 		_nanosleep(DATA_DELAY);
+#endif
 
-		if (count1) {
+		if (row_count) {
 			_hw_set(CLK(ROW));
 		}
 
-		if (count2) {
+		if (col_count) {
 			_hw_set(CLK(COL));
 		}
 
+#ifndef NOSLEEP
 		_nanosleep(CLK_DELAY);
+#endif
 
-		if (count1) {
+		if (row_count) {
 			_hw_clr(CLK(ROW));
 		}
 
-		if (count2) {
+		if (col_count) {
 			_hw_clr(CLK(COL));
 		}
 
-		if (count1) {
-			count1--;
+		if (row_count) {
+			row_count--;
 		}
 
-		if (count2) {
-			count2--;
+		if (col_count) {
+			col_count--;
 		}
 	}
 }
@@ -420,7 +430,9 @@ strobe(void)
 {
 	_hw_set(STROBE);
 
+#ifndef NOSLEEP
 //	_nanosleep(STROBE_DELAY);
+#endif
 
 	_hw_clr(STROBE);
 }
