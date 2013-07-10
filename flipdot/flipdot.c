@@ -58,16 +58,16 @@ _hw_init(void)
 	bcm2835_gpio_clr(OE1);
 	bcm2835_gpio_clr(STROBE);
 	bcm2835_gpio_clr(DATA_ROW);
-	bcm2835_gpio_clr(DATA_COL);
 	bcm2835_gpio_clr(CLK_ROW);
+	bcm2835_gpio_clr(DATA_COL);
 	bcm2835_gpio_clr(CLK_COL);
 
 	bcm2835_gpio_fsel(OE0, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(OE1, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(STROBE, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(DATA_ROW, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_fsel(DATA_COL, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(CLK_ROW, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(DATA_COL, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(CLK_COL, BCM2835_GPIO_FSEL_OUTP);
 }
 
@@ -100,11 +100,13 @@ flipdot_init(void)
 {
 	_hw_init();
 
-	memset(frame_a, 0x00, sizeof(frame_a));
+	memset(frame_a, 0xFF, sizeof(frame_a));
 	memset(frame_b, 0x00, sizeof(frame_b));
 	frame_old = &frame_a;
 	frame_new = &frame_b;
+//	flipdot_display_frame(frame_new);
 //	flipdot_display_frame(frame_old);
+//	flipdot_display_frame(frame_new);
 }
 
 void
@@ -267,60 +269,6 @@ flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
 	}
 }
 
-/*
-void
-flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
-{
-	uint8_t row_select[(DISP_ROWS + 7) / 8];
-	uint8_t row_data_to_0[((DISP_COLS + 7) / 8) + 1];
-	uint8_t row_data_to_1[((DISP_COLS + 7) / 8) + 1];
-	uint_fast16_t frameidx = 0;
-	uint_fast8_t offset;
-	uint_fast8_t rem = 0;
-
-	for (uint_fast16_t row = 0; row < DISP_ROWS; row++) {
-#if ((DISP_COLS % 8) != 0)
-		uint8_t *rowptr_to_0 = row_data_to_0;
-		uint8_t *rowptr_to_1 = row_data_to_1;
-		if (rem) {
-			*rowptr_to_0++ = *((uint8_t *)diff_to_0 + frameidx) & (0xFF << (8 - rem));
-			*rowptr_to_1++ = *((uint8_t *)diff_to_1 + frameidx) & (0xFF << (8 - rem));
-			frameidx++;
-			offset = 8 - rem;
-		} else {
-			offset = 0;
-		}
-		memcpy(rowptr_to_0, diff_to_0 + frameidx, (DISP_COLS - rem) / 8);
-		memcpy(rowptr_to_1, diff_to_1 + frameidx, (DISP_COLS - rem) / 8);
-		frameidx += ((DISP_COLS - rem) / 8);
-		rowptr_to_0 += ((DISP_COLS - rem) / 8);
-		rowptr_to_1 += ((DISP_COLS - rem) / 8);
-		rem = 8 - ((DISP_COLS - rem) % 8);
-		*rowptr_to_0 = *((uint8_t *)diff_to_0 + frameidx) & (0xFF >> rem);
-		*rowptr_to_1 = *((uint8_t *)diff_to_1 + frameidx) & (0xFF >> rem);
-#else
-		memcpy(row_data_to_0, diff_to_0 + frameidx, DISP_COLS / 8);
-		memcpy(row_data_to_1, diff_to_1 + frameidx, DISP_COLS / 8);
-		frameidx += DISP_COLS / 8;
-		offset = 0;
-		rem = 0;
-#endif
-
-		memset(row_select, 0, sizeof(row_select));
-		SETBIT(row_select, row);
-		sreg_fill(ROW, row_select, DISP_ROWS, 0);
-
-		sreg_fill(COL, row_data_to_0, DISP_COLS, offset);
-		strobe();
-		flip_to_0();
-
-		sreg_fill(COL, row_data_to_1, DISP_COLS, offset);
-		strobe();
-		flip_to_1();
-	}
-}
-*/
-
 static void
 sreg_push_bit(enum sreg reg, uint_fast8_t bit)
 {
@@ -431,7 +379,7 @@ strobe(void)
 	_hw_set(STROBE);
 
 #ifndef NOSLEEP
-//	_nanosleep(STROBE_DELAY);
+	_nanosleep(STROBE_DELAY);
 #endif
 
 	_hw_clr(STROBE);
@@ -441,7 +389,7 @@ static void
 flip_to_0(void)
 {
 	_hw_clr(OE1);
-_nanosleep(1000);
+	_nanosleep(OE_DELAY);
 	_hw_set(OE0);
 
 	_nanosleep(FLIP_DELAY);
@@ -453,7 +401,7 @@ static void
 flip_to_1(void)
 {
 	_hw_clr(OE0);
-_nanosleep(1000);
+	_nanosleep(OE_DELAY);
 	_hw_set(OE1);
 
 	_nanosleep(FLIP_DELAY);

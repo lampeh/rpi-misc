@@ -30,13 +30,13 @@
 #define STROBE 7
 
 #define DATA_COL 8
-#define DATA_ROW 11
-
 #define CLK_COL 25
+
+#define DATA_ROW 11
 #define CLK_ROW 9
 
-#define OE1 10
 #define OE0 24
+#define OE1 10
 
 
 // shift register set-up time (ns)
@@ -44,6 +44,9 @@
 // shift register pulse width (ns)
 #define CLK_DELAY 25
 #define STROBE_DELAY 25
+
+// OE0 to OE1 delay (ns)
+#define OE_DELAY 500
 
 // flip motor pulse width (ns)
 #define FLIP_DELAY 500*1000
