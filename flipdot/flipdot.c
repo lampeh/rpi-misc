@@ -182,6 +182,7 @@ flipdot_display_frame(flipdot_frame_t *frame)
 		sreg_fill(ROW, row_select, DISP_ROWS, 0);
 		sreg_fill(COL, row_data, DISP_COLS, offset);
 */
+
 		sreg_fill2(row_select, DISP_ROWS, 0, row_data, DISP_COLS, offset);
 		strobe();
 		flip_to_0();
@@ -202,8 +203,10 @@ flipdot_update_frame(flipdot_frame_t *frame) {
 	memcpy(frame_new, frame, sizeof(flipdot_frame_t));
 
 	for (uint_fast16_t i = 0; i < sizeof(flipdot_frame_t); i++) {
-		diff_to_0[i] = *((uint8_t *)frame_old + i) & ~*((uint8_t *)frame_old + i);
-		diff_to_1[i] = ~(~*((uint8_t *)frame_old + i) & *((uint8_t *)frame_old + i));
+//		diff_to_0[i] = *((uint8_t *)frame_old + i) & ~*((uint8_t *)frame_old + i);
+//		diff_to_1[i] = ~(~*((uint8_t *)frame_old + i) & *((uint8_t *)frame_old + i));
+		diff_to_0[i] = ~(0xFF & ~*((uint8_t *)frame_old + i));
+		diff_to_1[i] = 0x00 & *((uint8_t *)frame_old + i);
 	}
 	flipdot_display_diff(&diff_to_0, &diff_to_1);	
 }
@@ -255,8 +258,6 @@ flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
 /*
 		sreg_fill(ROW, row_select, DISP_ROWS, 0);
 		sreg_fill(COL, row_data_to_0, DISP_COLS, offset);
-		strobe();
-		flip_to_0();
 */
 
 		sreg_fill2(row_select, DISP_ROWS, 0, row_data_to_0, DISP_COLS, offset);
@@ -314,6 +315,9 @@ sreg_fill2(const uint8_t *row_data, uint_fast16_t row_count, uint_fast8_t row_of
 {
 	uint_fast16_t j = 0;
 
+row_count++;
+col_count++;
+
 	while (row_count || col_count) {
 		if (col_count && j-- == 0) {
 			// skip unused register bits
@@ -324,7 +328,7 @@ sreg_fill2(const uint8_t *row_data, uint_fast16_t row_count, uint_fast8_t row_of
 		}
 
 		if (row_count) {
-			if (ISBITSET(row_data, row_count + row_offset)) {
+			if (ISBITSET(row_data, row_count + row_offset - 1)) {
 				_hw_set(DATA(ROW));
 			} else {
 				_hw_clr(DATA(ROW));
@@ -332,7 +336,7 @@ sreg_fill2(const uint8_t *row_data, uint_fast16_t row_count, uint_fast8_t row_of
 		}
 
 		if (col_count) {
-			if (ISBITSET(col_data, col_count + col_offset)) {
+			if (ISBITSET(col_data, col_count + col_offset - 1)) {
 				_hw_set(DATA(COL));
 			} else {
 				_hw_clr(DATA(COL));
