@@ -3580,15 +3580,15 @@ type RDH, grid 15 mm</description>
 <part name="D18" library="diode" deviceset="1N4004" device="" value=""/>
 <part name="L" library="inductors" deviceset="DS10" device="" value=""/>
 <part name="QYH" library="transistor-power" deviceset="PMOSFET_P" device="TO220BV"/>
-<part name="QX" library="transistor-power" deviceset="PMOSFET_P" device="TO220BV"/>
+<part name="QXH" library="transistor-power" deviceset="PMOSFET_P" device="TO220BV"/>
 <part name="QYL" library="transistor-power" deviceset="PMOSFET_N" device="TO220BV"/>
-<part name="QC" library="transistor-power" deviceset="PMOSFET_N" device="TO220BV"/>
+<part name="QCL" library="transistor-power" deviceset="PMOSFET_N" device="TO220BV"/>
 <part name="DC" library="diode" deviceset="1N4004" device="" value=""/>
 <part name="DX" library="diode" deviceset="1N4004" device="" value=""/>
 <part name="GND2" library="supply1" deviceset="GND" device=""/>
 <part name="P+2" library="supply1" deviceset="V+" device=""/>
 <part name="QYH'" library="transistor-power" deviceset="BD679" device="" value=""/>
-<part name="QX'" library="transistor-power" deviceset="BD679" device="" value=""/>
+<part name="QXH'" library="transistor-power" deviceset="BD679" device="" value=""/>
 <part name="GND1" library="supply1" deviceset="GND" device=""/>
 <part name="GND3" library="supply1" deviceset="GND" device=""/>
 <part name="RX1" library="resistor" deviceset="R-EU_" device="R0603" value="1k5"/>
@@ -3600,7 +3600,7 @@ type RDH, grid 15 mm</description>
 </parts>
 <sheets>
 <sheet>
-<description>Flip Dot Matrix</description>
+<description>Matrix</description>
 <plain>
 <rectangle x1="7.62" y1="50.8" x2="27.94" y2="71.12" layer="97"/>
 <rectangle x1="7.62" y1="27.94" x2="27.94" y2="48.26" layer="97"/>
@@ -3872,7 +3872,7 @@ type RDH, grid 15 mm</description>
 </nets>
 </sheet>
 <sheet>
-<description>Flip Dot Pixel</description>
+<description>Pixel</description>
 <plain>
 </plain>
 <instances>
@@ -3881,7 +3881,7 @@ type RDH, grid 15 mm</description>
 <attribute name="NAME" x="25.4" y="53.34" size="1.778" layer="95"/>
 <attribute name="VALUE" x="25.4" y="53.34" size="1.778" layer="96"/>
 </instance>
-<instance part="QX" gate="G$1" x="45.72" y="53.34" smashed="yes" rot="MR0">
+<instance part="QXH" gate="G$1" x="45.72" y="53.34" smashed="yes" rot="MR0">
 <attribute name="NAME" x="40.64" y="53.34" size="1.778" layer="95" rot="MR0"/>
 <attribute name="VALUE" x="40.64" y="53.34" size="1.778" layer="96" rot="MR0"/>
 </instance>
@@ -3889,7 +3889,7 @@ type RDH, grid 15 mm</description>
 <attribute name="NAME" x="25.4" y="17.78" size="1.778" layer="95"/>
 <attribute name="VALUE" x="25.4" y="17.78" size="1.778" layer="96"/>
 </instance>
-<instance part="QC" gate="G$1" x="45.72" y="17.78" smashed="yes" rot="MR0">
+<instance part="QCL" gate="G$1" x="45.72" y="17.78" smashed="yes" rot="MR0">
 <attribute name="NAME" x="40.64" y="17.78" size="1.778" layer="95" rot="MR0"/>
 <attribute name="VALUE" x="40.64" y="17.78" size="1.778" layer="96" rot="MR0"/>
 </instance>
@@ -3901,7 +3901,7 @@ type RDH, grid 15 mm</description>
 <attribute name="NAME" x="12.7" y="35.56" size="1.778" layer="95"/>
 <attribute name="VALUE" x="15.24" y="35.56" size="1.778" layer="96"/>
 </instance>
-<instance part="QX'" gate="1" x="55.88" y="35.56" smashed="yes" rot="MR0">
+<instance part="QXH'" gate="1" x="55.88" y="35.56" smashed="yes" rot="MR0">
 <attribute name="NAME" x="53.34" y="35.56" size="1.778" layer="95" rot="MR0"/>
 <attribute name="VALUE" x="50.8" y="35.56" size="1.778" layer="96" rot="MR0"/>
 </instance>
@@ -3930,7 +3930,7 @@ type RDH, grid 15 mm</description>
 </net>
 <net name="N$24" class="0">
 <segment>
-<pinref part="QX" gate="G$1" pin="D"/>
+<pinref part="QXH" gate="G$1" pin="D"/>
 <pinref part="DX" gate="1" pin="A"/>
 <wire x1="43.18" y1="48.26" x2="43.18" y2="43.18" width="0.1524" layer="91"/>
 </segment>
@@ -3948,14 +3948,14 @@ type RDH, grid 15 mm</description>
 </net>
 <net name="N$26" class="0">
 <segment>
-<pinref part="QC" gate="G$1" pin="D"/>
+<pinref part="QCL" gate="G$1" pin="D"/>
 <pinref part="DC" gate="1" pin="C"/>
 <wire x1="43.18" y1="22.86" x2="43.18" y2="27.94" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="X-OE0" class="0">
 <segment>
-<pinref part="QC" gate="G$1" pin="G"/>
+<pinref part="QCL" gate="G$1" pin="G"/>
 <wire x1="48.26" y1="15.24" x2="53.34" y2="15.24" width="0.1524" layer="91"/>
 <label x="58.42" y="15.24" size="1.778" layer="95"/>
 <pinref part="RX3" gate="G$1" pin="2"/>
@@ -3976,7 +3976,7 @@ type RDH, grid 15 mm</description>
 <wire x1="22.86" y1="60.96" x2="22.86" y2="58.42" width="0.1524" layer="91"/>
 <junction x="22.86" y="60.96"/>
 <pinref part="RX1" gate="G$1" pin="1"/>
-<pinref part="QX" gate="G$1" pin="S"/>
+<pinref part="QXH" gate="G$1" pin="S"/>
 <wire x1="43.18" y1="60.96" x2="43.18" y2="58.42" width="0.1524" layer="91"/>
 <junction x="43.18" y="60.96"/>
 </segment>
@@ -3993,7 +3993,7 @@ type RDH, grid 15 mm</description>
 <pinref part="RX3" gate="G$1" pin="1"/>
 <wire x1="43.18" y1="10.16" x2="33.02" y2="10.16" width="0.1524" layer="91"/>
 <junction x="33.02" y="10.16"/>
-<pinref part="QC" gate="G$1" pin="S"/>
+<pinref part="QCL" gate="G$1" pin="S"/>
 <wire x1="43.18" y1="12.7" x2="43.18" y2="10.16" width="0.1524" layer="91"/>
 <junction x="43.18" y="10.16"/>
 </segment>
@@ -4004,7 +4004,7 @@ type RDH, grid 15 mm</description>
 </segment>
 <segment>
 <pinref part="GND3" gate="1" pin="GND"/>
-<pinref part="QX'" gate="1" pin="E"/>
+<pinref part="QXH'" gate="1" pin="E"/>
 <wire x1="53.34" y1="30.48" x2="53.34" y2="27.94" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -4028,7 +4028,7 @@ type RDH, grid 15 mm</description>
 </net>
 <net name="!X-OE1" class="0">
 <segment>
-<pinref part="QX'" gate="1" pin="B"/>
+<pinref part="QXH'" gate="1" pin="B"/>
 <wire x1="58.42" y1="35.56" x2="66.04" y2="35.56" width="0.1524" layer="91"/>
 <label x="58.42" y="35.56" size="1.778" layer="95"/>
 </segment>
@@ -4053,7 +4053,7 @@ type RDH, grid 15 mm</description>
 </net>
 <net name="N$11" class="0">
 <segment>
-<pinref part="QX'" gate="1" pin="C"/>
+<pinref part="QXH'" gate="1" pin="C"/>
 <pinref part="RX2" gate="G$1" pin="2"/>
 <wire x1="53.34" y1="40.64" x2="53.34" y2="43.18" width="0.1524" layer="91"/>
 </segment>
@@ -4063,7 +4063,7 @@ type RDH, grid 15 mm</description>
 <pinref part="RX2" gate="G$1" pin="1"/>
 <pinref part="RX1" gate="G$1" pin="2"/>
 <wire x1="53.34" y1="53.34" x2="53.34" y2="55.88" width="0.1524" layer="91"/>
-<pinref part="QX" gate="G$1" pin="G"/>
+<pinref part="QXH" gate="G$1" pin="G"/>
 <wire x1="53.34" y1="55.88" x2="53.34" y2="60.96" width="0.1524" layer="91"/>
 <wire x1="50.8" y1="55.88" x2="53.34" y2="55.88" width="0.1524" layer="91"/>
 <junction x="53.34" y="55.88"/>
