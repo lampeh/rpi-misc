@@ -32,19 +32,21 @@
 #define SETBIT(b,i) (((b)[(i) >> 3]) |= (1 << ((i) & 7)))
 #define CLEARBIT(b,i) (((b)[(i) >> 3]) &=~ (1 << ((i) & 7)))
 
+#ifndef _BV
+#define _BV(x) (1 << (x))
+#endif
+
 #define DATA(reg) (((reg) == ROW) ? (DATA_ROW) : (DATA_COL))
 #define CLK(reg) (((reg) == ROW) ? (CLK_ROW) : (CLK_COL))
 #define OE(reg) (((reg) == ROW) ? (OE_ROW) : (OE_COL))
 
-
-static flipdot_frame_t frame_a;
-static flipdot_frame_t frame_b;
-static flipdot_frame_t *frame_new, *frame_old;
-
+static uint8_t frame_a[FRAME_BYTE_COUNT];
+static uint8_t frame_b[FRAME_BYTE_COUNT];
+static uint8_t *frame_new, *frame_old;
 
 static void sreg_push_bit(enum sreg reg, uint_fast8_t bit);
-static void sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t offset);
-static void sreg_fill2(const uint8_t *row_data, uint_fast16_t row_count, uint_fast8_t row_offset, const uint8_t *col_data, uint_fast16_t col_count, uint_fast8_t col_offset);
+static void sreg_fill(enum sreg reg, uint8_t *data, uint_fast16_t count);
+static void sreg_fill2(uint8_t *row_data, uint_fast16_t row_count, uint8_t *col_data, uint_fast16_t col_count);
 static void strobe(void);
 static void flip_to_0(void);
 static void flip_to_1(void);
@@ -69,6 +71,28 @@ _hw_init(void)
 	bcm2835_gpio_fsel(CLK_ROW, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(DATA_COL, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(CLK_COL, BCM2835_GPIO_FSEL_OUTP);
+}
+
+static inline void
+_hw_shutdown(void)
+{
+	// TODO: disable pud?
+
+	bcm2835_gpio_clr(OE0);
+	bcm2835_gpio_clr(OE1);
+	bcm2835_gpio_clr(STROBE);
+	bcm2835_gpio_clr(DATA_ROW);
+	bcm2835_gpio_clr(CLK_ROW);
+	bcm2835_gpio_clr(DATA_COL);
+	bcm2835_gpio_clr(CLK_COL);
+
+	bcm2835_gpio_fsel(OE0, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(OE1, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(STROBE, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(DATA_ROW, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(CLK_ROW, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(DATA_COL, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(CLK_COL, BCM2835_GPIO_FSEL_INPT);
 }
 
 static inline void
@@ -102,29 +126,28 @@ flipdot_init(void)
 
 	memset(frame_a, 0xFF, sizeof(frame_a));
 	memset(frame_b, 0x00, sizeof(frame_b));
-	frame_old = &frame_a;
-	frame_new = &frame_b;
-//	flipdot_display_frame(frame_new);
-//	flipdot_display_frame(frame_old);
-//	flipdot_display_frame(frame_new);
+	frame_old = frame_a;
+	frame_new = frame_b;
+}
+
+void
+flipdot_shutdown(void)
+{
+	_hw_shutdown();
 }
 
 void
 flipdot_clear_to_0(void)
 {
-	flipdot_frame_t frame;
-
-	memset(frame, 0x00, sizeof(frame));
-	flipdot_display_frame(&frame);
+	memset(frame_old, 0x00, FRAME_BYTE_COUNT);
+	flipdot_display_frame(frame_old);
 }
 
 void
 flipdot_clear_to_1(void)
 {
-	flipdot_frame_t frame;
-
-	memset(frame, 0xFF, sizeof(frame));
-	flipdot_display_frame(&frame);
+	memset(frame_old, 0xFF, FRAME_BYTE_COUNT);
+	flipdot_display_frame(frame_old);
 }
 
 /*
@@ -136,138 +159,139 @@ flipdot_clear(void)
 */
 
 void
-flipdot_display_row(flipdot_row_reg_t *rows, flipdot_col_reg_t *cols)
+flipdot_display_row(uint8_t *rows, uint8_t *cols)
 {
-	sreg_fill(ROW, (uint8_t *)rows, DISP_ROWS, 0);
-	sreg_fill(COL, (uint8_t *)cols, DISP_COLS, 0);
+//	sreg_fill(ROW, rows, REGISTER_ROWS);
+//	sreg_fill(COL, cols, REGISTER_COLS);
+	sreg_fill2(rows, REGISTER_ROWS, cols, REGISTER_COLS);
 	strobe();
 	flip_to_0();
 	flip_to_1();
 }
 
+
 void
-flipdot_display_frame(flipdot_frame_t *frame)
+flipdot_display_row_diff(uint8_t *rows, uint8_t *cols_to_0, uint8_t *cols_to_1)
 {
-	uint8_t row_select[(DISP_ROWS + 7) / 8];
-	uint8_t row_data[((DISP_COLS + 7) / 8) + 1];
-	uint8_t *frameptr = (uint8_t *)frame;
-	uint_fast8_t offset;
-	uint_fast8_t rem = 0;
+//	sreg_fill(ROW, rows, REGISTER_ROWS);
+//	sreg_fill(COL, cols_to_0, REGISTER_COLS);
+	sreg_fill2(rows, REGISTER_ROWS, cols_to_0, REGISTER_COLS);
+	strobe();
+	flip_to_0();
 
-	for (uint_fast16_t row = 0; row < DISP_ROWS; row++) {
-#if ((DISP_COLS % 8) != 0)
-		uint8_t *rowptr = row_data;
-		if (rem) {
-			*rowptr++ = *frameptr++ & (0xFF << (8 - rem));
-			offset = 8 - rem;
-		} else {
-			offset = 0;
-		}
-		memcpy(rowptr, frameptr, (DISP_COLS - rem) / 8);
-		frameptr += ((DISP_COLS - rem) / 8);
-		rowptr += ((DISP_COLS - rem) / 8);
-		rem = 8 - ((DISP_COLS - rem) % 8);
-		*rowptr = *frameptr & (0xFF >> rem);
-#else
-		memcpy(row_data, frameptr, DISP_COLS / 8);
-		frameptr += DISP_COLS / 8;
-		offset = 0;
-		rem = 0;
-#endif
+	sreg_fill(COL, cols_to_1, REGISTER_COLS);
+	strobe();
+	flip_to_1();
+}
 
-		memset(row_select, 0, sizeof(row_select));
-		SETBIT(row_select, row);						/* Set selected row */
 
-/*
-		sreg_fill(ROW, row_select, DISP_ROWS, 0);
-		sreg_fill(COL, row_data, DISP_COLS, offset);
-*/
+//flipdot_display_frame(flipdot_frame_t *frame)
+void
+flipdot_display_frame(uint8_t *frame)
+{
+	uint8_t rows[REGISTER_ROWS];
+	uint8_t cols[REGISTER_COLS];
+	uint8_t *frameptr;
 
-		sreg_fill2(row_select, DISP_ROWS, 0, row_data, DISP_COLS, offset);
-		strobe();
-		flip_to_0();
-		flip_to_1();
+	memcpy(frame_new, frame, FRAME_BYTE_COUNT);
+	frameptr = (uint8_t *)frame_new;
+
+	for (uint_fast16_t row = 0; row < REGISTER_ROWS; row++) {
+		memcpy(cols, frameptr, REGISTER_COL_BYTE_COUNT);
+		frameptr += REGISTER_COL_BYTE_COUNT;
+
+		memset(rows, 0, sizeof(rows));
+		SETBIT(rows, row);
+
+		flipdot_display_row(rows, cols);
 	}
 }
 
 void
-flipdot_update_frame(flipdot_frame_t *frame) {
-	flipdot_frame_t *tmp;
-	flipdot_frame_t diff_to_0;
-	flipdot_frame_t diff_to_1;
+flipdot_update_frame(uint8_t *frame)
+{
+	uint8_t rows[REGISTER_ROWS];
+	uint8_t cols_to_0[REGISTER_COLS];
+	uint8_t cols_to_1[REGISTER_COLS];
+	uint8_t *frameptr_new;
+	uint8_t *frameptr_old;
+	uint_fast8_t row_changed;
 
-	tmp = frame_old;
+	uint8_t *tmp = frame_old;
 	frame_old = frame_new;
 	frame_new = tmp;
 
-	memcpy(frame_new, frame, sizeof(flipdot_frame_t));
+	memcpy(frame_new, frame, FRAME_BYTE_COUNT);
 
-	for (uint_fast16_t i = 0; i < sizeof(flipdot_frame_t); i++) {
-//		diff_to_0[i] = *((uint8_t *)frame_old + i) & ~*((uint8_t *)frame_old + i);
-//		diff_to_1[i] = ~(~*((uint8_t *)frame_old + i) & *((uint8_t *)frame_old + i));
-		diff_to_0[i] = ~(0xFF & ~*((uint8_t *)frame_old + i));
-		diff_to_1[i] = 0x00 & *((uint8_t *)frame_old + i);
+	frameptr_new = (uint8_t *)frame_new;
+	frameptr_old = (uint8_t *)frame_old;
+
+	for (uint_fast16_t row = 0; row < REGISTER_ROWS; row++) {
+		row_changed = 0;
+
+		for (uint_fast16_t col = 0; col < REGISTER_COL_BYTE_COUNT; col++) {
+			cols_to_0[col] = ~((*frameptr_old) & ~(*frameptr_new));
+			cols_to_1[col] = (~(*frameptr_old) & (*frameptr_new));
+
+			if (cols_to_0[col] != 0xFF || cols_to_1[col] != 0x00) {
+				row_changed = 1;
+			}
+
+			frameptr_old++;
+			frameptr_new++;
+		}
+
+		if (row_changed) {
+			memset(rows, 0, sizeof(rows));
+			SETBIT(rows, row);
+
+			flipdot_display_row_diff(rows, cols_to_0, cols_to_1);
+		}
 	}
-	flipdot_display_diff(&diff_to_0, &diff_to_1);	
 }
 
-// TODO: skip unchanged rows
+// Slow bit copy
 void
-flipdot_display_diff(flipdot_frame_t *diff_to_0, flipdot_frame_t *diff_to_1)
+flipdot_bitmap_to_frame(uint8_t *bitmap, uint8_t *frame)
 {
-	uint8_t row_select[(DISP_ROWS + 7) / 8];
-	uint8_t row_data_to_0[((DISP_COLS + 7) / 8) + 1];
-	uint8_t row_data_to_1[((DISP_COLS + 7) / 8) + 1];
-	uint8_t *frameptr_to_0 = (uint8_t *)diff_to_0;
-	uint8_t *frameptr_to_1 = (uint8_t *)diff_to_1;
-	uint_fast8_t offset;
-	uint_fast8_t rem = 0;
+	memset(frame, 0x00, FRAME_BYTE_COUNT);
 
-	for (uint_fast16_t row = 0; row < DISP_ROWS; row++) {
-#if ((DISP_COLS % 8) != 0)
-		uint8_t *rowptr_to_0 = row_data_to_0;
-		uint8_t *rowptr_to_1 = row_data_to_1;
-		if (rem) {
-			*rowptr_to_0++ = *frameptr_to_0++ & (0xFF << (8 - rem));
-			*rowptr_to_1++ = *frameptr_to_1++ & (0xFF << (8 - rem));
-			offset = 8 - rem;
-		} else {
-			offset = 0;
+	for (uint_fast16_t i = 0; i < DISP_PIXEL_COUNT; i++) {
+		if (ISBITSET((uint8_t *)bitmap, i)) {
+			SETBIT((uint8_t *)frame, i + ((i / MODULE_COLS) * COL_GAP));
 		}
-		memcpy(rowptr_to_0, frameptr_to_0, (DISP_COLS - rem) / 8);
-		memcpy(rowptr_to_1, frameptr_to_0, (DISP_COLS - rem) / 8);
-		frameptr_to_0 += ((DISP_COLS - rem) / 8);
-		frameptr_to_1 += ((DISP_COLS - rem) / 8);
-		rowptr_to_0 += ((DISP_COLS - rem) / 8);
-		rowptr_to_1 += ((DISP_COLS - rem) / 8);
-		rem = 8 - ((DISP_COLS - rem) % 8);
-		*rowptr_to_0 = *frameptr_to_0 & (0xFF >> rem);
-		*rowptr_to_1 = *frameptr_to_1 & (0xFF >> rem);
-#else
-		memcpy(row_data_to_0, frameptr_to_0, DISP_COLS / 8);
-		memcpy(row_data_to_1, frameptr_to_1, DISP_COLS / 8);
-		frameptr_to_0 += DISP_COLS / 8;
-		frameptr_to_1 += DISP_COLS / 8;
-		offset = 0;
-		rem = 0;
-#endif
-
-		memset(row_select, 0, sizeof(row_select));
-		SETBIT(row_select, row);						/* Set selected row */
-
-/*
-		sreg_fill(ROW, row_select, DISP_ROWS, 0);
-		sreg_fill(COL, row_data_to_0, DISP_COLS, offset);
-*/
-
-		sreg_fill2(row_select, DISP_ROWS, 0, row_data_to_0, DISP_COLS, offset);
-		strobe();
-		flip_to_0();
-
-		sreg_fill(COL, row_data_to_1, DISP_COLS, offset);
-		strobe();
-		flip_to_1();
 	}
+}
+
+void
+flipdot_frame_to_bitmap(uint8_t *frame, uint8_t *bitmap)
+{
+	memset(bitmap, 0x00, DISP_BYTE_COUNT);
+
+	for (uint_fast16_t i = 0; i < DISP_PIXEL_COUNT; i++) {
+		if (ISBITSET((uint8_t *)frame, i + ((i / MODULE_COLS) * COL_GAP))) {
+			SETBIT((uint8_t *)bitmap, i);
+		}
+	}
+}
+
+void
+flipdot_display_bitmap(uint8_t *bitmap)
+{
+	uint8_t frame[FRAME_BYTE_COUNT];
+
+	flipdot_bitmap_to_frame(bitmap, frame);
+	flipdot_display_frame(frame);
+}
+
+
+void
+flipdot_update_bitmap(uint8_t *bitmap)
+{
+	uint8_t frame[FRAME_BYTE_COUNT];
+
+	flipdot_bitmap_to_frame(bitmap, frame);
+	flipdot_update_frame(frame);
 }
 
 static void
@@ -283,52 +307,36 @@ sreg_push_bit(enum sreg reg, uint_fast8_t bit)
 #endif
 
 	_hw_set(CLK(reg));
+
 #ifndef NOSLEEP
 	_nanosleep(CLK_DELAY);
 #endif
 
 	_hw_clr(CLK(reg));
+
 #ifndef NOSLEEP
 	//_nanosleep(CLK_DELAY);
 #endif
 }
 
 static void
-sreg_fill(enum sreg reg, const uint8_t *data, uint_fast16_t count, uint_fast8_t offset)
+sreg_fill(enum sreg reg, uint8_t *data, uint_fast16_t count)
 {
-	uint_fast16_t j = 0;
-
 	while (count--) {
-		if (reg == COL && j-- == 0) {
-			// skip unused register bits
-			for (uint_fast8_t k = 0; k < COL_GAP; k++) {
-				sreg_push_bit(reg, 0);
-			}
-			j = MODULE_COLS;
-		}
-		sreg_push_bit(reg, ISBITSET(data, count + offset));
+		sreg_push_bit(reg, ISBITSET(data, count));
 	}
 }
 
 static void
-sreg_fill2(const uint8_t *row_data, uint_fast16_t row_count, uint_fast8_t row_offset, const uint8_t *col_data, uint_fast16_t col_count, uint_fast8_t col_offset)
+sreg_fill2(uint8_t *row_data, uint_fast16_t row_count, uint8_t *col_data, uint_fast16_t col_count)
 {
-	uint_fast16_t j = 0;
-
+// FIXME: off by one
 row_count++;
 col_count++;
 
 	while (row_count || col_count) {
-		if (col_count && j-- == 0) {
-			// skip unused register bits
-			for (uint_fast8_t k = 0; k < COL_GAP; k++) {
-				sreg_push_bit(COL, 0);
-			}
-			j = MODULE_COLS;
-		}
-
 		if (row_count) {
-			if (ISBITSET(row_data, row_count + row_offset - 1)) {
+			if (ISBITSET(row_data, row_count - 1)) {
 				_hw_set(DATA(ROW));
 			} else {
 				_hw_clr(DATA(ROW));
@@ -336,7 +344,7 @@ col_count++;
 		}
 
 		if (col_count) {
-			if (ISBITSET(col_data, col_count + col_offset - 1)) {
+			if (ISBITSET(col_data, col_count - 1)) {
 				_hw_set(DATA(COL));
 			} else {
 				_hw_clr(DATA(COL));
@@ -393,7 +401,11 @@ static void
 flip_to_0(void)
 {
 	_hw_clr(OE1);
+
+#ifndef NOSLEEP
 	_nanosleep(OE_DELAY);
+#endif
+
 	_hw_set(OE0);
 
 	_nanosleep(FLIP_DELAY);
@@ -405,7 +417,11 @@ static void
 flip_to_1(void)
 {
 	_hw_clr(OE0);
+
+#ifndef NOSLEEP
 	_nanosleep(OE_DELAY);
+#endif
+
 	_hw_set(OE1);
 
 	_nanosleep(FLIP_DELAY);
