@@ -3953,7 +3953,7 @@ type RDH, grid 15 mm</description>
 <wire x1="43.18" y1="22.86" x2="43.18" y2="27.94" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="X-OE0" class="0">
+<net name="X-OE1" class="0">
 <segment>
 <pinref part="QCL" gate="G$1" pin="G"/>
 <wire x1="48.26" y1="15.24" x2="53.34" y2="15.24" width="0.1524" layer="91"/>
@@ -4008,7 +4008,7 @@ type RDH, grid 15 mm</description>
 <wire x1="53.34" y1="30.48" x2="53.34" y2="27.94" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="Y-OE1" class="0">
+<net name="Y-OE0" class="0">
 <segment>
 <pinref part="QYL" gate="G$1" pin="G"/>
 <wire x1="17.78" y1="15.24" x2="12.7" y2="15.24" width="0.1524" layer="91"/>
@@ -4019,14 +4019,14 @@ type RDH, grid 15 mm</description>
 <junction x="12.7" y="15.24"/>
 </segment>
 </net>
-<net name="Y-OE0" class="0">
+<net name="Y-OE1" class="0">
 <segment>
 <pinref part="QYH'" gate="1" pin="B"/>
 <wire x1="7.62" y1="35.56" x2="0" y2="35.56" width="0.1524" layer="91"/>
 <label x="0" y="35.56" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="!X-OE1" class="0">
+<net name="!X-OE0" class="0">
 <segment>
 <pinref part="QXH'" gate="1" pin="B"/>
 <wire x1="58.42" y1="35.56" x2="66.04" y2="35.56" width="0.1524" layer="91"/>
