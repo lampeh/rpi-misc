@@ -402,9 +402,7 @@ flip_to_0(void)
 {
 	_hw_clr(OE1);
 
-#ifndef NOSLEEP
 	_nanosleep(OE_DELAY);
-#endif
 
 	_hw_set(OE0);
 
@@ -418,9 +416,7 @@ flip_to_1(void)
 {
 	_hw_clr(OE0);
 
-#ifndef NOSLEEP
 	_nanosleep(OE_DELAY);
-#endif
 
 	_hw_set(OE1);
 
