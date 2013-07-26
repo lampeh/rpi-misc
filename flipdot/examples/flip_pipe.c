@@ -7,7 +7,7 @@
 #define BMP_SETBIT(b,x,y) b[((y*DISP_COLS)+x)>>3]|=(1<<(((y*DISP_COLS)+x)&7));
 #define BMP_CLEARBIT(b,x,y) b[((y*DISP_COLS)+x)>>3]&=(1<<(((y*DISP_COLS)+x)&7))^0xFF;
 
-flipdot_frame_t bmp;
+uint8_t bmp[DISP_BYTE_COUNT];
 unsigned int x, y;
 
 int main(void) {
@@ -17,6 +17,8 @@ int main(void) {
 		return 1;
 
 	flipdot_init();
+	flipdot_clear_to_0();
+
 	memset(bmp, 0x00, sizeof(bmp));
 	x = 0;
 	y = 0;
@@ -24,7 +26,7 @@ int main(void) {
 	while ((c = getc(stdin)) != EOF) {
 		if (c == '\n') {
 			if ((c = getc(stdin)) == '\n') {
-				flipdot_display_frame(&bmp);
+				flipdot_update_bitmap(bmp);
 				memset(bmp, 0x00, sizeof(bmp));
 				x = 0;
 				y = 0;
@@ -46,7 +48,5 @@ int main(void) {
 			x++;
 		}
 	}
-
-//	flipdot_display_frame(&bmp);
 	return(0);
 }

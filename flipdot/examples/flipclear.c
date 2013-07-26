@@ -7,6 +7,8 @@ int main(void) {
 
 	flipdot_init();
 	flipdot_clear_to_0();
+	flipdot_clear_to_1();
+	flipdot_clear_to_0();
 
 	return(0);
 }
