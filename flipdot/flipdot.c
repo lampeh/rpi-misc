@@ -124,7 +124,7 @@ flipdot_init(void)
 {
 	_hw_init();
 
-	memset(frame_a, 0xFF, sizeof(frame_a));
+	memset(frame_a, 0x00, sizeof(frame_a));
 	memset(frame_b, 0x00, sizeof(frame_b));
 	frame_old = frame_a;
 	frame_new = frame_b;
@@ -185,7 +185,6 @@ flipdot_display_row_diff(uint8_t *rows, uint8_t *cols_to_0, uint8_t *cols_to_1)
 }
 
 
-//flipdot_display_frame(flipdot_frame_t *frame)
 void
 flipdot_display_frame(uint8_t *frame)
 {
@@ -330,9 +329,13 @@ sreg_fill(enum sreg reg, uint8_t *data, uint_fast16_t count)
 static void
 sreg_fill2(uint8_t *row_data, uint_fast16_t row_count, uint8_t *col_data, uint_fast16_t col_count)
 {
-// FIXME: off by one
-row_count++;
-col_count++;
+	// FIXME: off by one
+	if (row_count) {
+		row_count++;
+	}
+	if (col_count) {
+		col_count++;
+	}
 
 	while (row_count || col_count) {
 		if (row_count) {
