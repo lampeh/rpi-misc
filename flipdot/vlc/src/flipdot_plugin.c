@@ -111,8 +111,8 @@ static int Open(vlc_object_t *object)
 	vd->manage  = NULL;
 
 	/* Fix initial state */
-    vout_display_SendEventFullscreen(vd, false);
-    vout_display_SendEventDisplaySize(vd, fmt.i_width, fmt.i_height, false);
+	vout_display_SendEventFullscreen(vd, false);
+	vout_display_SendEventDisplaySize(vd, fmt.i_width, fmt.i_height, false);
 //	Refresh(vd);
 
 	return VLC_SUCCESS;
@@ -144,8 +144,8 @@ static void Close(vlc_object_t *object)
 	if (sys->pool)
 		picture_pool_Delete(sys->pool);
 
-		if (sys->bitmap)
-			free(sys->bitmap);
+	if (sys->bitmap)
+		free(sys->bitmap);
 
 	free(sys);
 }
@@ -267,7 +267,7 @@ static int Control(vout_display_t *vd, int query, va_list args)
 			return VLC_SUCCESS;
 		}
 
-	default:
-		return VLC_EGENERIC;
+		default:
+			return VLC_EGENERIC;
 	}
 }
