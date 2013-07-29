@@ -107,14 +107,14 @@ static int Open(vlc_object_t *object)
 
 	vd->pool    = Pool;
 	vd->prepare = Prepare;
-	vd->display = PictureDisplay;
+	vd->display = Display;
 	vd->control = Control;
-	vd->manage  = Manage;
+	vd->manage  = NULL;
 
 	/* Fix initial state */
     vout_display_SendEventFullscreen(vd, false);
     vout_display_SendEventDisplaySize(vd, fmt.i_width, fmt.i_height, false);
-	Refresh(vd);
+//	Refresh(vd);
 
 	return VLC_SUCCESS;
 
@@ -158,7 +158,9 @@ static void Close(vlc_object_t *object)
 static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
 {
 	vout_display_sys_t *sys = vd->sys;
-	VLC_UNUSED(count);
+
+	if (sys->pool)
+		return sys->pool;
 
 	if (!sys->pool) {
 		picture_resource_t rsc;
@@ -232,25 +234,18 @@ static void Prepare(vout_display_t *vd, picture_t *picture, subpicture_t *subpic
 /**
  * Display a picture
  */
-static void PictureDisplay(vout_display_t *vd, picture_t *picture, subpicture_t *subpicture)
+static void Display(vout_display_t *vd, picture_t *picture, subpicture_t *subpicture)
 {   
-	Refresh(vd);
-	picture_Release(picture);
-	VLC_UNUSED(subpicture);
-}
+//	assert(!picture_IsReferenced(picture));
 
-/**
- * Refresh the display and send resize event
- */
-static void Refresh(vout_display_t *vd)
-{
-	vout_display_sys_t *sys = vd->sys;
-
-	flipdot_update_bitmap(sys->bitmap);
+	flipdot_update_bitmap(vd->sys->bitmap);
 
 	if (vd->cfg->display.width != DISP_COLS ||
 		vd->cfg->display.height != DISP_ROWS)
 			vout_display_SendEventDisplaySize(vd, DISP_COLS, DISP_ROWS, false);
+
+	picture_Release(picture);
+	VLC_UNUSED(subpicture);
 }
 
 /**
@@ -258,30 +253,22 @@ static void Refresh(vout_display_t *vd)
  */
 static int Control(vout_display_t *vd, int query, va_list args)
 {
-	vout_display_sys_t *sys = vd->sys;
-
 	switch (query) {
+		case VOUT_DISPLAY_CHANGE_FULLSCREEN:
 		case VOUT_DISPLAY_CHANGE_DISPLAY_SIZE: {
 			const vout_display_cfg_t *cfg = va_arg(args, const vout_display_cfg_t *);
 
-			/* Not quite good but not sure how to resize it */
-			if (cfg->display.width != DISP_COLS ||
-				cfg->display.height != DISP_ROWS)
+			if (cfg->display.width != vd->fmt.i_width ||
+				cfg->display.height != vd->fmt.i_height)
 					return VLC_EGENERIC;
+
+			if (cfg->is_fullscreen)
+				return VLC_EGENERIC;
 
 			return VLC_SUCCESS;
 		}
 
-		default:
-			msg_Err(vd, "Unsupported query in vout display flipdot");
-			return VLC_EGENERIC;
+	default:
+		return VLC_EGENERIC;
 	}
-}
-
-/**
- * Proccess pending event
- */
-static void Manage(vout_display_t *vd)
-{
-	vout_display_sys_t *sys = vd->sys;
 }
