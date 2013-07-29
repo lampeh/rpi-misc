@@ -50,10 +50,6 @@ static void           Prepare(vout_display_t *, picture_t *, subpicture_t *);
 static void           Display(vout_display_t *, picture_t *, subpicture_t *);
 static int            Control(vout_display_t *, int, va_list);
 
-/* */
-static void Refresh(vout_display_t *);
-static void Place(vout_display_t *, vout_display_place_t *);
-
 
 struct vout_display_sys_t {
 	uint8_t *bitmap;
