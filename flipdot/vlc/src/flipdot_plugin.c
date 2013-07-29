@@ -47,11 +47,10 @@ vlc_module_end()
  *****************************************************************************/
 static picture_pool_t *Pool  (vout_display_t *, unsigned);
 static void           Prepare(vout_display_t *, picture_t *, subpicture_t *);
-static void    PictureDisplay(vout_display_t *, picture_t *, subpicture_t *);
+static void           Display(vout_display_t *, picture_t *, subpicture_t *);
 static int            Control(vout_display_t *, int, va_list);
 
 /* */
-static void Manage(vout_display_t *);
 static void Refresh(vout_display_t *);
 static void Place(vout_display_t *, vout_display_place_t *);
 
