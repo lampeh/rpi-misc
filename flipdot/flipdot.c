@@ -329,14 +329,6 @@ sreg_fill(enum sreg reg, uint8_t *data, uint_fast16_t count)
 static void
 sreg_fill2(uint8_t *row_data, uint_fast16_t row_count, uint8_t *col_data, uint_fast16_t col_count)
 {
-	// FIXME: off by one
-	if (row_count) {
-		row_count++;
-	}
-	if (col_count) {
-		col_count++;
-	}
-
 	while (row_count || col_count) {
 		if (row_count) {
 			if (ISBITSET(row_data, row_count - 1)) {
