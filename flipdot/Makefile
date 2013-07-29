@@ -10,7 +10,7 @@ EXECUTABLES=$(SOURCES:.c=)
 all: $(EXECUTABLES)
 
 clean:
-	-rm $(EXECUTABLES) $(OBJECTS)
+	-rm $(EXECUTABLES) $(OBJECTS) flipdot.o
 
 flipdot.o: flipdot.c flipdot.h
 	$(CC) $(CFLAGS) -ffunction-sections -c -DNOSLEEP flipdot.c -o flipdot.o
