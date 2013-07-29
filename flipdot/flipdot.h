@@ -46,9 +46,11 @@
 #define STROBE_DELAY 25
 
 // OE0 to OE1 delay (ns)
-#define OE_DELAY 500
+//#define OE_DELAY 500
+#define OE_DELAY 100*1000
 
 // flip motor pulse width (ns)
+//#define FLIP_DELAY 350*1000
 #define FLIP_DELAY 500*1000
 //#define FLIP_DELAY 850*1000
 //#define FLIP_DELAY 1000*1000
