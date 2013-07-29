@@ -24,14 +24,14 @@ TARGETS = libflipdot_plugin.so
 all: libflipdot_plugin.so
 
 install: all
-	mkdir -p -- $(DESTDIR)$(plugindir)/misc
-	$(INSTALL) --mode 0755 libflipdot_plugin.so $(DESTDIR)$(plugindir)/misc
+	mkdir -p -- $(DESTDIR)$(plugindir)/video_output
+	$(INSTALL) --mode 0755 libflipdot_plugin.so $(DESTDIR)$(plugindir)/video_output
 
 install-strip:
 	$(MAKE) install INSTALL="$(INSTALL) -s"
 
 uninstall:
-	rm -f $(plugindir)/misc/libflipdot_plugin.so
+	rm -f $(plugindir)/video_output/libflipdot_plugin.so
 
 clean:
 	rm -f -- libflipdot_plugin.so src/*.o
