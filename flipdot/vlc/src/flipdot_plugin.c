@@ -1,7 +1,6 @@
 /*****************************************************************************
  * Preamble
  *****************************************************************************/
-
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 #include <vlc_vout_display.h>
@@ -13,6 +12,7 @@
 #ifndef N_
 #define N_(str) (str)
 #endif
+
 
 /*****************************************************************************
  * Module descriptor
@@ -94,19 +94,9 @@ static int Open(vlc_object_t *object)
 	/* Fix format */
 	video_format_t fmt = vd->fmt;
 
-//	fmt.i_chroma = VLC_CODEC_RGB8;
 	fmt.i_chroma = VLC_CODEC_GREY;
 	fmt.i_width  = DISP_COLS;
 	fmt.i_height = DISP_ROWS;
-
-/*
-	if (fmt.i_chroma != VLC_CODEC_RGB32) {
-		fmt.i_chroma = VLC_CODEC_RGB32;
-		fmt.i_rmask = 0x00ff0000;
-		fmt.i_gmask = 0x0000ff00;
-		fmt.i_bmask = 0x000000ff;
-	}
-*/
 
 	/* TODO */
 	vout_display_info_t info = vd->info;
@@ -195,7 +185,6 @@ static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
 /**
  * Return a pool of direct buffers
  */
-/*
 static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
 {   
 	vout_display_sys_t *sys = vd->sys;
@@ -205,60 +194,36 @@ static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
 
 	return sys->pool;
 }
-*/
-
-static uint8_t rgb_to_y(uint8_t r, uint8_t g, uint8_t b) {
-	/* Some magic values from a YCbCr standard */
-//	uint16_t y = 66*r + 129*g + 25*r;
-	uint16_t y = 66*r + 129*g + 25*b;
-	return (y+128) >> 8; /* Divide by 255 and round */
-}
 
 #define SETBIT(b,i) (((b)[(i) >> 3]) |= (1 << ((i) & 7)))
 #define CLEARBIT(b,i) (((b)[(i) >> 3]) &=~ (1 << ((i) & 7)))
 
+// TODO: use config option
 #define THRESHOLD 129
 
 /**
- * Prepare a picture for display */
+ * Prepare a picture for display
+ */
 static void Prepare(vout_display_t *vd, picture_t *picture, subpicture_t *subpicture)
 {
 	vout_display_sys_t *sys = vd->sys;
-	vout_display_place_t place;
 
-	memset(sys->bitmap, 0xFF, DISP_BYTE_COUNT);
+	memset(sys->bitmap, 0x00, DISP_BYTE_COUNT);
 
 	// TODO: dithering
 
-/*
-printf("planes = %d, i_visible_lines = %d, i_visible_pitch = %d, i_lines = %d, i_pitch = %d, pixel_pitch = %d\n",
-	picture->i_planes,
-	picture->p->i_visible_lines, picture->p->i_visible_pitch, picture->p->i_lines, picture->p->i_pitch,
-	picture->p->i_pixel_pitch);
-*/
-
+	// another slow bit copy
 	for (unsigned long y = vd->source.i_y_offset; y < (vd->source.i_y_offset + picture->p->i_visible_lines); y++) {
 		for (unsigned long x = vd->source.i_x_offset; x < (vd->source.i_y_offset + picture->p->i_visible_pitch); x++) {
-			unsigned int pixelidx = (y * picture->p->i_pitch) + (x * picture->p->i_pixel_pitch);
+			unsigned long pixelidx = (y * picture->p->i_pitch) + (x * picture->p->i_pixel_pitch);
 
-			uint8_t r =  *(picture->p->p_pixels + pixelidx + 0);
-/*
-			uint8_t g =  *(picture->p->p_pixels + pixelidx + 1);
-			uint8_t b =  *(picture->p->p_pixels + pixelidx + 2);
-			uint8_t pixel_value = rgb_to_y(r, g, b);
-*/
-			uint8_t pixel_value = r;
+			uint8_t pixel_value = *(picture->p->p_pixels + pixelidx);
 			uint8_t pixel = 0;
-			if (y < DISP_ROWS && x < DISP_COLS && pixel_value > THRESHOLD) {
-				CLEARBIT(sys->bitmap, (y * DISP_COLS) + x);
+			if (pixel_value < THRESHOLD && y < DISP_ROWS && x < DISP_COLS) {
+				SETBIT(sys->bitmap, (y * DISP_COLS) + x);
 				pixel = 1;
 			}
-/*
-printf("pixelidx = %d, i_visible_lines = %d, i_visible_pitch = %d, i_lines = %d, i_pitch = %d\n",
-			pixelidx, picture->p->i_visible_lines, picture->p->i_visible_pitch, picture->p->i_lines, picture->p->i_pitch);
-*/
-
-//printf("x = %ld, y = %ld, pixelidx = %d, pixel_value = %d, bit = %d\n", x, y, pixelidx, pixel_value, pixel);
+//printf("x = %ld, y = %ld, pixelidx = %ld, pixel_value = %d, pixel = %d\n", x, y, pixelidx, pixel_value, pixel);
 		}
 	}
 	VLC_UNUSED(subpicture);
@@ -286,37 +251,6 @@ static void Refresh(vout_display_t *vd)
 	if (vd->cfg->display.width != DISP_COLS ||
 		vd->cfg->display.height != DISP_ROWS)
 			vout_display_SendEventDisplaySize(vd, DISP_COLS, DISP_ROWS, false);
-}
-
-/**
- * Compute the place in canvas unit.
- */
-static void Place(vout_display_t *vd, vout_display_place_t *place)
-{   
-	vout_display_sys_t *sys = vd->sys;
-
-	vout_display_PlacePicture(place, &vd->source, vd->cfg, false);
-
-/*
-    if (display_width > 0 && display_height > 0) {
-        place->x      =  place->x      * canvas_width  / display_width;
-        place->y      =  place->y      * canvas_height / display_height;
-        place->width  = (place->width  * canvas_width  + display_width/2)  / display_width;
-        place->height = (place->height * canvas_height + display_height/2) / display_height;
-    } else {
-*/
-
-		place->x = 0;
-		place->y = 0;
-
-		place->width = DISP_COLS;
-		place->height = DISP_ROWS;
-
-/*
-        place->width  = canvas_width;
-        place->height = display_height;
-    }
-*/
 }
 
 /**
