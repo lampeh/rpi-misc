@@ -5,6 +5,7 @@
 #include <vlc_plugin.h>
 #include <vlc_vout_display.h>
 #include <vlc_picture_pool.h>
+#include <assert.h>
 
 #include <bcm2835.h>
 #include "flipdot.h"
@@ -52,7 +53,7 @@ static int            Control(vout_display_t *, int, va_list);
 
 
 struct vout_display_sys_t {
-	uint8_t *bitmap;
+	uint8_t *frame;
 	picture_pool_t *pool;
 };
 
@@ -63,21 +64,23 @@ struct vout_display_sys_t {
 static int Open(vlc_object_t *object)
 {
 	vout_display_t *vd = (vout_display_t *)object;
-	vout_display_sys_t *sys;
-
+	vout_display_sys_t *sys = NULL;
     
 	if (!bcm2835_init()) {
+		msg_Err(vd, "cannot initialize bcm2835 library");
 		goto error;
 	}
 
 	/* Allocate structure */
 	vd->sys = sys = calloc(1, sizeof(*sys));
-	if (!sys)
+	if (!sys) {
+		msg_Err(vd, "cannot allocate private data");
 		goto error;
+	}
 
-	sys->bitmap = calloc(1, DISP_BYTE_COUNT);
-	if (!sys->bitmap) {
-		msg_Err(vd, "cannot allocate flipdot bitmap");
+	sys->frame = calloc(1, FRAME_BYTE_COUNT);
+	if (!sys->frame) {
+		msg_Err(vd, "cannot allocate flipdot frame");
 		goto error;
 	}
 
@@ -109,7 +112,6 @@ static int Open(vlc_object_t *object)
 	/* Fix initial state */
 	vout_display_SendEventFullscreen(vd, false);
 	vout_display_SendEventDisplaySize(vd, fmt.i_width, fmt.i_height, false);
-//	Refresh(vd);
 
 	return VLC_SUCCESS;
 
@@ -118,8 +120,8 @@ error:
 		if (sys->pool)
 			picture_pool_Delete(sys->pool);
 
-		if (sys->bitmap)
-			free(sys->bitmap);
+		if (sys->frame)
+			free(sys->frame);
 
 		free(sys);
 	}
@@ -140,8 +142,8 @@ static void Close(vlc_object_t *object)
 	if (sys->pool)
 		picture_pool_Delete(sys->pool);
 
-	if (sys->bitmap)
-		free(sys->bitmap);
+	if (sys->frame)
+		free(sys->frame);
 
 	free(sys);
 }
@@ -195,30 +197,38 @@ static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
 #define SETBIT(b,i) (((b)[(i) >> 3]) |= (1 << ((i) & 7)))
 #define CLEARBIT(b,i) (((b)[(i) >> 3]) &=~ (1 << ((i) & 7)))
 
-// TODO: use config option
-#define THRESHOLD 129
-
 /**
  * Prepare a picture for display
  */
 static void Prepare(vout_display_t *vd, picture_t *picture, subpicture_t *subpicture)
 {
 	vout_display_sys_t *sys = vd->sys;
+	int64_t threshold = var_InheritInteger(vd, "threshold");
 
-	memset(sys->bitmap, 0x00, DISP_BYTE_COUNT);
+	memset(sys->frame, 0x00, FRAME_BYTE_COUNT);
 
 	// TODO: dithering
 
 	// another slow bit copy
-	for (unsigned long y = vd->source.i_y_offset; y < (vd->source.i_y_offset + picture->p->i_visible_lines); y++) {
-		for (unsigned long x = vd->source.i_x_offset; x < (vd->source.i_y_offset + picture->p->i_visible_pitch); x++) {
-			unsigned long pixelidx = (y * picture->p->i_pitch) + (x * picture->p->i_pixel_pitch);
+	for (unsigned int y1 = vd->source.i_y_offset; y1 < (vd->source.i_y_offset + picture->p->i_visible_lines); y1++) {
+		for (unsigned int x1 = vd->source.i_x_offset; x1 < (vd->source.i_x_offset + picture->p->i_visible_pitch); x1++) {
+			unsigned long pixelidx = (y1 * picture->p->i_pitch) + (x1 * picture->p->i_pixel_pitch);
+/*
+//assert(vd->source.i_bits_per_pixel == 8);
+	for (unsigned int y1 = vd->source.i_y_offset; y1 < (vd->source.i_y_offset + vd->source.i_visible_height); y1++) {
+		for (unsigned int x1 = vd->source.i_x_offset; x1 < (vd->source.i_x_offset + vd->source.i_visible_width); x1++) {
+			// we'll just assume i_bits_per_pixel == 8 for VLC_CODEC_GREY
+			unsigned long pixelidx = (y1 * vd->source.i_width) + x1;
+*/
+			unsigned int y = y1 - vd->source.i_y_offset;
+			unsigned int x = x1 - vd->source.i_x_offset;
 
 			uint8_t pixel_value = *(picture->p->p_pixels + pixelidx);
 			uint8_t pixel = 0;
-			if (pixel_value < THRESHOLD && y < DISP_ROWS && x < DISP_COLS) {
-				SETBIT(sys->bitmap, (y * DISP_COLS) + x);
+			if (pixel_value <= threshold && y < DISP_ROWS && x < DISP_COLS) {
+				SETBIT(sys->frame, (y * REGISTER_COLS) + x + ((x / MODULE_COLS) * COL_GAP));
 				pixel = 1;
+
 			}
 //printf("x = %ld, y = %ld, pixelidx = %ld, pixel_value = %d, pixel = %d\n", x, y, pixelidx, pixel_value, pixel);
 		}
@@ -233,7 +243,7 @@ static void Display(vout_display_t *vd, picture_t *picture, subpicture_t *subpic
 {   
 //	assert(!picture_IsReferenced(picture));
 
-	flipdot_update_bitmap(vd->sys->bitmap);
+	flipdot_update_frame(vd->sys->frame);
 
 	if (vd->cfg->display.width != DISP_COLS ||
 		vd->cfg->display.height != DISP_ROWS)
