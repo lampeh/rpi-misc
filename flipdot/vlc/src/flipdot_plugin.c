@@ -37,7 +37,7 @@ vlc_module_begin()
 	set_description(N_("Flip Dot Matrix video output"))
 //	add_integer("width", 1, FD_WIDTH_TEXT, FD_WIDTH_LONGTEXT, false)
 //	add_integer("height", 1, FD_HEIGHT_TEXT, FD_HEIGHT_LONGTEXT, false)
-	add_integer_with_range("threshold", 129, 0, 255, FD_THRESH_TEXT, FD_THRESH_LONGTEXT, false)
+//	add_integer_with_range("threshold", 129, 0, 255, FD_THRESH_TEXT, FD_THRESH_LONGTEXT, false)
 	set_capability("vout display", 0)
 	set_callbacks(Open, Close)
 vlc_module_end()
@@ -151,39 +151,6 @@ static void Close(vlc_object_t *object)
 /**
  * Return a pool of direct buffers
  */
-/*
-static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
-{
-	vout_display_sys_t *sys = vd->sys;
-
-	if (sys->pool)
-		return sys->pool;
-
-	if (!sys->pool) {
-		picture_resource_t rsc;
-
-		memset(&rsc, 0, sizeof(rsc));
-
-		rsc.p[0].p_pixels = calloc(1, DISP_BYTE_COUNT);
-		if (!rsc.p[0].p_pixels) {
-			msg_Err(vd, "cannot allocate flipdot picture");
-		}
-		rsc.p[0].i_pitch = DISP_COLS;
-		rsc.p[0].i_lines = DISP_ROWS;
-
-		picture_t *p_picture = picture_NewFromResource(&vd->fmt, &rsc);
-		if (!p_picture)
-			return NULL;
-
-		sys->pool = picture_pool_New(1, &p_picture);
-	}
-	return sys->pool;
-}
-*/
-
-/**
- * Return a pool of direct buffers
- */
 static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
 {   
 	vout_display_sys_t *sys = vd->sys;
@@ -203,7 +170,8 @@ static picture_pool_t *Pool(vout_display_t *vd, unsigned count)
 static void Prepare(vout_display_t *vd, picture_t *picture, subpicture_t *subpicture)
 {
 	vout_display_sys_t *sys = vd->sys;
-	int64_t threshold = var_InheritInteger(vd, "threshold");
+//	int64_t threshold = var_InheritInteger(vd, "threshold");
+	uint8_t threshold = 127;
 
 	memset(sys->frame, 0x00, FRAME_BYTE_COUNT);
 
@@ -212,23 +180,17 @@ static void Prepare(vout_display_t *vd, picture_t *picture, subpicture_t *subpic
 	// another slow bit copy
 	for (unsigned int y1 = vd->source.i_y_offset; y1 < (vd->source.i_y_offset + picture->p->i_visible_lines); y1++) {
 		for (unsigned int x1 = vd->source.i_x_offset; x1 < (vd->source.i_x_offset + picture->p->i_visible_pitch); x1++) {
+
 			unsigned long pixelidx = (y1 * picture->p->i_pitch) + (x1 * picture->p->i_pixel_pitch);
-/*
-//assert(vd->source.i_bits_per_pixel == 8);
-	for (unsigned int y1 = vd->source.i_y_offset; y1 < (vd->source.i_y_offset + vd->source.i_visible_height); y1++) {
-		for (unsigned int x1 = vd->source.i_x_offset; x1 < (vd->source.i_x_offset + vd->source.i_visible_width); x1++) {
-			// we'll just assume i_bits_per_pixel == 8 for VLC_CODEC_GREY
-			unsigned long pixelidx = (y1 * vd->source.i_width) + x1;
-*/
-			unsigned int y = y1 - vd->source.i_y_offset;
-			unsigned int x = x1 - vd->source.i_x_offset;
+
+			unsigned long y = y1 - vd->source.i_y_offset;
+			unsigned long x = x1 - vd->source.i_x_offset;
 
 			uint8_t pixel_value = *(picture->p->p_pixels + pixelidx);
 			uint8_t pixel = 0;
 			if (pixel_value <= threshold && y < DISP_ROWS && x < DISP_COLS) {
 				SETBIT(sys->frame, (y * REGISTER_COLS) + x + ((x / MODULE_COLS) * COL_GAP));
 				pixel = 1;
-
 			}
 //printf("x = %ld, y = %ld, pixelidx = %ld, pixel_value = %d, pixel = %d\n", x, y, pixelidx, pixel_value, pixel);
 		}
