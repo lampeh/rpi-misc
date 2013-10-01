@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.4">
+<eagle version="6.5.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="yes"/>
@@ -5417,7 +5417,7 @@ type RDH, grid 15 mm</description>
 <label x="88.9" y="22.86" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="!Q1" class="0">
+<net name="!Q" class="0">
 <segment>
 <pinref part="IC17" gate="B" pin="I0"/>
 <label x="185.42" y="149.86" size="1.778" layer="95"/>
@@ -5475,7 +5475,7 @@ type RDH, grid 15 mm</description>
 <label x="276.86" y="15.24" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="!QS*" class="0">
+<net name="!QS1" class="0">
 <segment>
 <pinref part="IC19" gate="A" pin="I0"/>
 <wire x1="292.1" y1="25.4" x2="289.56" y2="25.4" width="0.1524" layer="91"/>
@@ -5742,7 +5742,7 @@ type RDH, grid 15 mm</description>
 <label x="88.9" y="17.78" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="QS" class="0">
+<net name="QS1" class="0">
 <segment>
 <pinref part="IC1" gate="A" pin="QS"/>
 <wire x1="88.9" y1="96.52" x2="93.98" y2="96.52" width="0.1524" layer="91"/>
